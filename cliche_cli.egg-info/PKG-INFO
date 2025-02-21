@@ -1,10 +1,6 @@
 Metadata-Version: 2.2
 Name: cliche-cli
 Version: 0.1.0
-Summary: A CLI for Cliche
-Home-page: http://github.com/pinkpixel-dev/cliche.git
-Author: Made with <3 by Pink Pixel
-Author-email: admin@pinkpixel.dev
 Requires-Dist: click>=8.0.0
 Requires-Dist: openai>=0.27.0
 Requires-Dist: anthropic>=0.3.0

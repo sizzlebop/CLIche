@@ -17,6 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from openai import OpenAI
 import anthropic
+import google.generativeai
 from typing import Optional, Dict, List, Any, Tuple
 from enum import Enum
 
@@ -31,7 +32,7 @@ def get_gpu_info() -> Tuple[str, str]:
     try:
         # Try nvidia-smi first
         result = subprocess.run(['nvidia-smi', '--query-gpu=gpu_name,utilization.gpu', '--format=csv,noheader,nounits'],
-                             capture_output=True, text=True, check=True)
+                            capture_output=True, text=True, check=True)
         if result.stdout.strip():
             gpu_name, utilization = result.stdout.strip().split(',')
             return gpu_name.strip(), f"{utilization.strip()}%"
@@ -51,7 +52,7 @@ def get_gpu_info() -> Tuple[str, str]:
         # Try lspci as a last resort
         try:
             result = subprocess.run('lspci | grep -i "vga\\|3d\\|display"', 
-                                 shell=True, capture_output=True, text=True)
+                                shell=True, capture_output=True, text=True)
             if result.stdout:
                 return result.stdout.strip().split(':')[-1].strip(), "N/A"
         except (subprocess.SubprocessError, FileNotFoundError):
@@ -113,16 +114,17 @@ class Config:
             "providers": {
                 "openai": {
                     "api_key": "",
-                    "model": "gpt-3.5-turbo",
+                    "model": "gpt-4o",
                     "max_tokens": 150
                 },
                 "anthropic": {
                     "api_key": "",
-                    "model": "claude-2"
+                    "model": "claude-3.5-sonnet",
+                    "max_tokens": 150
                 },
                 "google": {
                     "api_key": "",
-                    "model": "gemini-pro"
+                    "model": "gemini-2.0-flash"
                 },
                 "deepseek": {
                     "api_key": "",
@@ -134,10 +136,10 @@ class Config:
                 },
                 "ollama": {
                     "host": "http://localhost:11434",
-                    "model": "llama2"
+                    "model": "Llama3.2:3b"
                 }
             },
-            "personality": "snarky"
+            "personality": "snarky, witty, encyclopedic, slightly sarcastic, helpful, knowledgeable"
         }
         self.save_config(default_config)
         return default_config
@@ -160,13 +162,35 @@ class OpenAIProvider(LLMBase):
     def __init__(self, config: Dict):
         super().__init__(config)
         self.client = OpenAI(api_key=config.get('api_key') or os.getenv('OPENAI_API_KEY'))
+        
+    def get_system_context(self) -> str:
+        """Get current system context including time, date, and system info."""
+        current_time = datetime.now().strftime("%I:%M %p")
+        current_date = datetime.now().strftime("%B %d, %Y")
+        cpu_usage = psutil.cpu_percent()
+        memory = psutil.virtual_memory().percent
+        gpu_name, gpu_usage = get_gpu_info()
+
+        context = f"""You are a snarky terminal assistant. Some current system information:
+- Current time: {current_time}
+- Current date: {current_date}
+- CPU Usage: {cpu_usage}%
+- Memory Usage: {memory}%
+- OS: {platform.system()} {platform.release()}"""
+
+        if gpu_name != "No GPU detected":
+            context += f"\n- GPU: {gpu_name} (Usage: {gpu_usage})"
+
+        context += "\n\nPlease provide concise, slightly sarcastic responses. Reference this system information only when relevant."
+        return context
 
     async def generate_response(self, query: str) -> str:
-        try:
+        try:                 
             response = self.client.chat.completions.create(
                 model=self.config['model'],
+                user=f"{query}\n\nSystem Context:\n{self.get_system_context()}", 
                 messages=[
-                    {"role": "system", "content": "You are a snarky, witty terminal assistant with encyclopedic knowledge. Keep responses concise and slightly sarcastic."},
+                    {"role": "system", "content": "You are a snarky, witty terminal assistant with encyclopedic and technical knowledge, as well as knowledge in pop culture, art, film and music. You are great at writing detailed documents on any subject when asked. Keep responses concise and slightly sarcastic."},
                     {"role": "user", "content": query}
                 ],
                 max_tokens=self.config.get('max_tokens', 150)
@@ -179,17 +203,85 @@ class AnthropicProvider(LLMBase):
     def __init__(self, config: Dict):
         super().__init__(config)
         self.client = anthropic.Client(api_key=config.get('api_key') or os.getenv('ANTHROPIC_API_KEY'))
+        
+    def get_system_context(self) -> str:
+        """Get current system context including time, date, and system info."""
+        current_time = datetime.now().strftime("%I:%M %p")
+        current_date = datetime.now().strftime("%B %d, %Y")
+        cpu_usage = psutil.cpu_percent()
+        memory = psutil.virtual_memory().percent
+        gpu_name, gpu_usage = get_gpu_info()
+
+        context = f"""You are a snarky terminal assistant. Some current system information:
+- Current time: {current_time}
+- Current date: {current_date}
+- CPU Usage: {cpu_usage}%
+- Memory Usage: {memory}%
+- OS: {platform.system()} {platform.release()}"""
+
+        if gpu_name != "No GPU detected":
+            context += f"\n- GPU: {gpu_name} (Usage: {gpu_usage})"
+
+        context += "\n\nPlease provide concise, slightly sarcastic responses. Reference this system information only when relevant."
+        return context
 
     async def generate_response(self, query: str) -> str:
         try:
-            response = self.client.messages.create(
-                model=self.config['model'],
-                max_tokens=1024,
-                messages=[{"role": "user", "content": query}]
-            )
-            return response.content[0].text
+            response = self.client.Completion.create(
+                engine=self.config['model'],
+                prompt=f"{query}\n\nSystem Context:\n{self.get_system_context()}",                
+                messages=[
+                    {"role": "system", "content": "You are a snarky, witty terminal assistant with encyclopedic and technical knowledge, as well as knowledge in pop culture, art, film and music. You are great at writing detailed documents on any subject when asked. Keep responses concise and slightly sarcastic."},
+                    {"role": "user", "content": query}
+                ],
+                max_tokens=self.config.get('max_tokens', 150)
+            )           
+            return response.content[0].message.content
         except Exception as e:
             return f"Anthropic Error: {str(e)}"
+        
+class GoogleProvider(LLMBase):
+    def __init__(self, config: Dict):
+        super().__init__(config)
+        self.client = google.generativeai.ChatClient(api_key=config.get('api_key') or os.getenv('GOOGLE_API_KEY'))
+        
+    def get_system_context(self) -> str:
+        """Get current system context including time, date, and system info."""
+        current_time = datetime.now().strftime("%I:%M %p")
+        current_date = datetime.now().strftime("%B %d, %Y")
+        cpu_usage = psutil.cpu_percent()
+        memory = psutil.virtual_memory().percent
+        gpu_name, gpu_usage = get_gpu_info()
+
+        context = f"""You are a snarky terminal assistant. Some current system information:
+- Current time: {current_time}
+- Current date: {current_date}
+- CPU Usage: {cpu_usage}%
+- Memory Usage: {memory}%
+- OS: {platform.system()} {platform.release()}"""
+
+        if gpu_name != "No GPU detected":
+            context += f"\n- GPU: {gpu_name} (Usage: {gpu_usage})"
+
+        context += "\n\nPlease provide concise, slightly sarcastic responses. Reference this system information only when relevant."
+        return context
+        
+    async def generate_response(self, query: str) -> str:
+        try:
+            system_context = self.get_system_context()
+            response = await self.client.predict_response(
+                model=self.config['model'],
+                user_input=f"{query}\n\nSystem Context:\n{self.get_system_context()}",          
+                temperature=0.9,
+                messages=[
+                    {"role": "system", "content": "You are a snarky, witty terminal assistant with encyclopedic and technical knowledge, as well as knowledge in pop culture, art, film and music. You are great at writing detailed documents on any subject when asked. Keep responses concise and slightly sarcastic."},
+                    {"role": "user", "content": query}
+                ],
+                max_tokens=self.config.get('max_tokens', 500)
+            )
+            return response.content[0].message.content
+        except Exception as e:
+            return f"Google Error: {str(e)}"
 
 class OllamaProvider(LLMBase):
     def __init__(self, config: Dict):
@@ -214,13 +306,13 @@ class OllamaProvider(LLMBase):
         if gpu_name != "No GPU detected":
             context += f"\n- GPU: {gpu_name} (Usage: {gpu_usage})"
 
-        context += "\n\nPlease provide concise, slightly sarcastic responses. You can reference this system information when relevant."
+        context += "\n\nPlease provide concise, slightly sarcastic responses. Reference this system information only when relevant."
         return context
 
     async def generate_response(self, query: str) -> str:
         try:
             system_context = self.get_system_context()
-            full_prompt = f"{system_context}\n\nUser: {query}\nAssistant:"
+            full_prompt = f"{system_context}\n\nUser: {query}\n\nYou are a snarky, witty terminal assistant with encyclopedic and technical knowledge, as well as knowledge in pop culture, art, film and music. You are great at writing detailed documents on any subject when asked. Keep responses concise and slightly sarcastic.\nAssistant:"
             
             response = requests.post(
                 f"{self.host}/api/generate",
@@ -255,6 +347,7 @@ class CLIche:
         providers = {
             'openai': OpenAIProvider,
             'anthropic': AnthropicProvider,
+            'google': GoogleProvider,
             'ollama': OllamaProvider
         }
         
@@ -428,11 +521,7 @@ def rename(source, target, force):
             shutil.move(str(source_path), str(target_path))
             click.echo(f"✨ Directory renamed from '{source}' to '{target}'")
             
-            if Path.cwd().name == source:
-                click.echo("\nTo continue working:")
-                click.echo("1. Close VSCode (if open)")
-                click.echo(f"2. Open the new directory: code {target}")
-                click.echo(f"3. Run: cd {target}")
+
         
         # Handle file renaming
         else:
