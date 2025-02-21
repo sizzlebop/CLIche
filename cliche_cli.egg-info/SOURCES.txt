@@ -1,0 +1,11 @@
+README.md
+setup.py
+cliche/__init__.py
+cliche/__main__.py
+cliche/core.py
+cliche_cli.egg-info/PKG-INFO
+cliche_cli.egg-info/SOURCES.txt
+cliche_cli.egg-info/dependency_links.txt
+cliche_cli.egg-info/entry_points.txt
+cliche_cli.egg-info/requires.txt
+cliche_cli.egg-info/top_level.txt
