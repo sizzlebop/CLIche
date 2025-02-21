@@ -13,6 +13,7 @@ import platform
 import asyncio
 import subprocess
 import shutil
+import fnmatch
 from datetime import datetime
 from pathlib import Path
 from openai import OpenAI
@@ -513,3 +514,65 @@ def rename(source, target, force):
 
     except Exception as e:
         click.echo(f"Error renaming: {str(e)}")
+
+@cli.command()
+@click.option('--name', help='Search for files by name (supports wildcards like *.txt)')
+@click.option('--type', 'filetype', help='Search for files by extension (e.g., png)')
+@click.option('--path', default=str(Path.home()), help='Starting path for search (default: home directory)')
+def find(name, filetype, path):
+    """Search for files by name or file type.
+    
+    Examples:
+    \b
+    Search by name (supports wildcards):
+        cliche find --name "*.txt"
+        cliche find --name "document*"
+    
+    Search by file type:
+        cliche find --type png
+        cliche find --type pdf
+    
+    Search in specific directory:
+        cliche find --name "*.jpg" --path /home/user/Pictures
+    """
+    try:
+        start_path = Path(path)
+        if not start_path.exists():
+            click.echo(f"Error: Path '{path}' does not exist")
+            return
+
+        if not name and not filetype:
+            click.echo("Error: Please provide either --name or --type option")
+            return
+
+        pattern = name if name else f"*.{filetype}"
+        found = False
+        
+        click.echo(f"🔍 Searching in {start_path}...")
+        click.echo("Press Ctrl+C to stop the search")
+        
+        # Skip system directories that could cause issues
+        skip_dirs = {'/proc', '/sys', '/dev', '/run'}
+        
+        try:
+            for filepath in start_path.rglob("*"):
+                try:
+                    # Skip system directories
+                    if any(str(filepath).startswith(skip) for skip in skip_dirs):
+                        continue
+                        
+                    if filepath.is_file() and fnmatch.fnmatch(filepath.name.lower(), pattern.lower()):
+                        click.echo(f"📄 {filepath}")
+                        found = True
+                except (PermissionError, OSError) as e:
+                    # Silently skip permission errors
+                    continue
+        except KeyboardInterrupt:
+            click.echo("\n🛑 Search stopped by user")
+            return
+
+        if not found:
+            click.echo("No matching files found. 🤷")
+            
+    except Exception as e:
+        click.echo(f"Error during search: {str(e)}")
