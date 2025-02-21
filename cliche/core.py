@@ -367,7 +367,12 @@ def ansi():
 @cli.command()
 def roastme():
     """Get a programming roast"""
-    click.echo(f"🔥 {random.choice(ROASTS)}")
+    assistant = CLIche()
+    roast_prompt = "Generate a snarky, witty roast about someone's programming skills or coding habits. Use the example roasts as inspiration but create a completely new one: 'Your code is so messy, even git refuses to track it.', 'Your debugging strategy is just println? How... innovative.', 'Your variable names are like cryptic poems nobody wants to read.'. Make it creative and programming-related."
+    response = asyncio.run(assistant.ask_llm(roast_prompt))
+    # Remove any quotation marks the LLM might add
+    response = response.strip().strip('"\'')
+    click.echo(f"🔥 {response}")
 
 @cli.command()
 def sysinfo():
