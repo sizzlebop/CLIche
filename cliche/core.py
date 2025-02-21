@@ -20,6 +20,7 @@ import anthropic
 import google.generativeai
 from typing import Optional, Dict, List, Any, Tuple
 from enum import Enum
+from .art import ANSI_ART, ROASTS
 
 try:
     import py3nvml as nvml
@@ -68,31 +69,6 @@ class LLMProvider(str, Enum):
     OPENROUTER = "openrouter"
     OLLAMA = "ollama"
 
-# ANSI art collection
-ANSI_ART = [
-    """
-    ╭━━━╮╱╱╱╱╭━━━╮
-    ┃╭━╮┃╱╱╱╱┃╭━╮┃
-    ┃┃╱╰╯╭━━╮┃╰━━╮
-    ┃┃╱╭╮┃╭╮┃╰━━╮┃
-    ┃╰━╯┃┃╰╯┃┃╰━╯┃
-    ╰━━━╯╰━━╯╰━━━╯
-    """,
-    """
-    ░█▀▀░█░░░▀█▀░█▀▀░█░█░█▀▀
-    ░█░░░█░░░░█░░█░░░█▀█░█▀▀
-    ░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀░▀░▀▀▀
-    """
-]
-
-# Snarky roasts
-ROASTS = [
-    "Your code is so messy, even git refuses to track it.",
-    "You write Python like someone who learned programming from COBOL tutorials.",
-    "Your debugging strategy is just println? How... innovative.",
-    "Your variable names are like cryptic poems nobody wants to read.",
-    "I've seen better code organization in a randomized array."
-]
 
 class Config:
     def __init__(self):
