@@ -6,6 +6,7 @@ import click
 import requests
 import os
 import json
+import re
 import sys
 import random
 import psutil
@@ -14,9 +15,12 @@ import asyncio
 import subprocess
 import shutil
 import fnmatch
+import stat
 from datetime import datetime
 from pathlib import Path
 from openai import OpenAI
+import black
+import mdformat
 import anthropic
 import google.generativeai
 from typing import Optional, Dict, List, Any, Tuple
@@ -338,7 +342,7 @@ class CLIche:
         try:
             return await self.provider.generate_response(query)
         except Exception as e:
-            return f"Error: {str(e)}"
+            return f"Error: Unable to generate content. Please check your provider configuration with 'cliche config --help'"
 
 @click.group()
 def cli():
@@ -369,7 +373,8 @@ def ansi():
 def roastme():
     """Get a programming roast"""
     assistant = CLIche()
-    roast_prompt = "Generate a snarky, witty roast about someone's programming skills or coding habits. Use the example roasts as inspiration but create a completely new one: 'Your code is so messy, even git refuses to track it.', 'Your debugging strategy is just println? How... innovative.', 'Your variable names are like cryptic poems nobody wants to read.'. Make it creative and programming-related."
+    roast_prompt = "Generate a snarky, witty roast. Use the example roasts as inspiration but create a completely new one: 'You have a face that would make onions cry.' 'I look at you and think, Two billion years of evolution, for this?' 'I am jealous of all the people that have never met you.' 'I consider you my sun. Now please get 93 million miles away from here.' 'If laughter is the best medicine, your face must be curing the world.' 'You're not simply a drama queen/king. You're the whole royal family.' 'I was thinking about you today. It reminded me to take out the trash.' 'You are the human version of cramps.' 'You haven't changed since the last time I saw you. You really should.''If ignorance is bliss, you must be the happiest person on Earth.'"
+
     response = asyncio.run(assistant.ask_llm(roast_prompt))
     # Remove any quotation marks the LLM might add
     response = response.strip().strip('"\'')
@@ -395,22 +400,359 @@ def sysinfo():
     for key, value in info.items():
         click.echo(f"{key}: {value}")
 
-@cli.command()
-def servers():
-    """List running servers and their ports"""
+def get_process_name(pid):
+    """Get process name for a given PID."""
+    try:
+        process = psutil.Process(pid)
+        return process.name(), process.cmdline()
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        return "Unknown", []
+
+def get_service_default_ports():
+    """Return a mapping of services to their default ports."""
+    return {
+        'ollama': 11434,
+        'jupyter': [8888, 8889],
+        'mysql': 3306,
+        'postgresql': 5432,
+        'mongodb': 27017,
+        'redis': 6379,
+        'elasticsearch': 9200,
+        'cassandra': 9042,
+        'rabbitmq': 5672,
+        'kafka': 9092,
+        'nginx': [80, 443],
+        'apache': [80, 443],
+        'next.js': 3000,
+        'vite': 5173,
+        'webpack': 8080,
+        'streamlit': 8501,
+        'fastapi': 8000,
+        'django': 8000,
+        'flask': 5000
+    }
+
+def is_port_available(port):
+    """Check if a port is likely being used by a service."""
+    try:
+        for conn in psutil.net_connections():
+            if conn.laddr.port == port:
+                return False
+        return True
+    except (psutil.AccessDenied, psutil.NoSuchProcess):
+        return False
+
+def is_system_port(port):
+    """Check if a port is likely a system port we want to filter out."""
+    return port < 20  # Only filter out very low system ports
+
+def get_short_command(cmdline):
+    """Get a simplified version of the command."""
+    return ' '.join(cmdline[:2]) if cmdline else 'Unknown'
+
+def get_docker_containers():
+    """Get list of running docker containers with their details."""
+    containers = {}
+    try:
+        result = subprocess.run(['docker', 'ps', '--format', '{{.ID}}\t{{.Image}}\t{{.Ports}}\t{{.Names}}'],
+                              capture_output=True, text=True, check=True)
+        if result.returncode == 0:
+            for line in result.stdout.strip().split('\n'):
+                if line:
+                    cid, image, ports, name = line.split('\t')
+                    port_list = []
+                    if ports:
+                        # Extract port numbers from Docker port mappings
+                        port_matches = re.findall(r':(\d+)->', ports)
+                        port_list = [int(p) for p in port_matches]
+                    containers[cid] = {
+                        'image': image,
+                        'ports': port_list,
+                        'name': name
+                    }
+    except (subprocess.SubprocessError, FileNotFoundError):
+        pass
+    return containers
+
+docker_containers = get_docker_containers()
+running_container_names = set(c['name'] for c in docker_containers.values())
+
+def detect_server_type(name, cmdline):
+    """Detect the type of server based on process name and command line."""
+    name = name.lower()
+    cmdline_str = ' '.join(cmdline).lower()
+
+    # Organize server types by categories
+    SERVER_CATEGORIES = {
+        'Web Servers': {
+            'nginx': ['nginx'],
+            'apache': ['apache2', 'httpd'],
+        },
+        
+        'Databases': {
+            'mysql': ['mysqld', 'mariadb', 'mysql.server'],
+            'postgresql': ['postgres', 'postgresql'],
+            'redis': ['redis-server', 'redis-server.exe'],
+            'mongodb': ['mongod', 'mongodb'],
+            'elasticsearch': ['elasticsearch'],
+            'cassandra': ['cassandra'],
+        },
+        
+        'Application Servers': {
+            'node': ['node', 'nodejs', 'npm', 'yarn'],
+            'python': ['python', 'python3', 'uwsgi', 'gunicorn'],
+            'java': ['java', 'tomcat', 'jetty'],
+            'php': ['php-fpm', 'php', 'artisan'],
+        },
+        
+        'Container Services': {
+            'docker': ['dockerd', 'docker', 'containerd', 'docker-compose'],
+            'ollama': ['ollama'],
+            'kubernetes': ['kubelet', 'kubectl', 'k8s'],
+        },
+        
+        'Message Queues': {
+            'rabbitmq': ['rabbitmq', 'rabbit'],
+            'kafka': ['kafka'],
+            'redis-mq': ['redis'],
+        },
+
+        'AI/ML Services': {
+            'jupyter': ['jupyter', 'jupyter-lab', 'jupyter-notebook'],
+        },
+
+        'Development Servers': {
+        'next.js': ['next', 'next-server'],
+        'vite': ['vite', '@vite/server'],
+        'webpack': ['webpack'],
+        'parcel': ['parcel'],
+        
+        # Web Frameworks
+        'django': ['django'],
+        'flask': ['flask'],
+        'fastapi': ['uvicorn', 'fastapi'],
+        'express': ['express'],
+        'nuxt': ['nuxt'],
+        'spring': ['spring-boot'],
+        'uvicorn': ['uvicorn'],
+        'gunicorn': ['gunicorn'],
+        'waitress': ['waitress-serve'],
+        'streamlit': ['streamlit'],
+        'gatsby': ['gatsby'],
+        'vue': ['vue-cli-service'],
+        'angular': ['ng serve'],
+        }}
+    
+    # Don't show our own CLI process
+    if any(x in cmdline_str for x in ['cliche servers', 'cliche --help']):
+        return None
+        
+    # Don't show system processes
+    if any(x in name.lower() for x in ['systemd', 'init', 'upstart', 'launchd']):
+        return None
+    
+    for category, server_types in SERVER_CATEGORIES.items():
+        for server_type, patterns in server_types.items():
+            if any(pattern in name for pattern in patterns):
+                if server_type == 'python' and not any(x in cmdline_str for x in ['server', 'flask', 'django', 'uvicorn', 'gunicorn', 'fastapi']):
+                    continue
+                if server_type == 'node' and not any(x in cmdline_str for x in ['server', 'express', 'http', 'next', 'nuxt']):
+                    continue
+                if server_type == 'java' and not any(x in cmdline_str for x in ['tomcat', 'spring', 'server', 'jetty']):
+                    continue
+                return f"{category}|{server_type}"
+
+    # Check for standalone services that don't fit into categories
+    if 'ollama' in name:
+        return 'AI/ML Services|ollama'
+            
+    # Handle npm/yarn dev servers
+    if ('npm' in name.lower() or 'yarn' in name.lower()) and any(x in cmdline_str for x in ['dev', 'start', 'serve']):
+        if 'next' in cmdline_str:
+            return 'next.js'
+        return 'dev-server'
+
+    
+    # Check command line for server indicators
+    if 'server' in cmdline_str or 'serve' in cmdline_str:
+        for keyword in ['dev', 'development', 'web', 'api']:
+            if keyword in cmdline_str:
+                return 'Development Servers|dev-server'
+    
+    if 'server' in cmdline_str:
+        return 'Other Services|generic-server'
+    
+    return None
+
+def get_all_servers():
+    """Get all running server processes regardless of open ports."""
+    servers = {}
+    default_ports = get_service_default_ports()
+    active_ports = {}
+    
+    # Get all active listening ports first
+    try:
+        for conn in psutil.net_connections():
+            if conn.status == 'LISTEN' and conn.pid and not is_system_port(conn.laddr.port):
+                active_ports[conn.pid] = active_ports.get(conn.pid, set()) | {conn.laddr.port}
+    except (psutil.AccessDenied, psutil.NoSuchProcess):
+        pass
+    
+    # First check all processes for server-like names
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        # Check Docker containers first
+        if docker_containers:
+            for container_id, container in docker_containers.items():
+                if container['name'] not in [s.get('name') for s in servers.values()]:
+                    # Extract service name from image (e.g., mysql:latest -> mysql)
+                    service_name = container['image'].split(':')[0].split('/')[-1].lower()
+                    servers[f"docker-{container_id}"] = {
+                        'type': f'docker-{service_name}',
+                        'display_name': container['name'],
+                        'name': container['name'],
+                        'ports': set(container['ports']),
+                        'cmdline': f"docker container: {container['image']}"
+                    }
+
+        try:
+            if proc.info['pid'] is None:
+                continue
+                
+            name = proc.info['name']
+            cmdline = proc.info['cmdline']
+            if not cmdline:
+                continue
+
+            # Check for virtual env servers
+            if any(x in ' '.join(cmdline).lower() for x in ['uvicorn', 'gunicorn', 'waitress', 'flask run']):
+                name = 'venv-server'
+            
+            # Check for known development servers
+            if any(x in ' '.join(cmdline).lower() for x in ['dev server', 'development server', 'webpack', 'vite']):
+                name = 'dev-server'
+            
+            # Skip if this is a docker container we already found
+            if name in running_container_names:
+                continue
+
+            server_type = detect_server_type(name, cmdline)
+            if server_type:
+                base_type = server_type.split('|')[1] if '|' in server_type else server_type
+                ports = set()
+                
+                # Add active ports for this process
+                if proc.info['pid'] in active_ports:
+                    ports.update(active_ports[proc.info['pid']])
+                    
+                # Add default ports if no active ports found
+                # Check active network connections
+                if proc.info['pid'] in servers:
+                    ports.update(servers[proc.info['pid']]['ports'])
+                
+                # Add known default ports for the service
+                if base_type in default_ports:
+                    if not ports and isinstance(default_ports[base_type], list):
+                        ports.update(default_ports[base_type])
+                    elif not ports:
+                        ports.add(default_ports[base_type])
+                
+                servers[proc.info['pid']] = {
+                    'type': server_type,
+                    'display_name': name,
+                    'ports': ports,
+                    'cmdline': ' '.join(cmdline) if cmdline else 'Unknown'
+                }
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+    
+    # Then add port information from network connections
     connections = psutil.net_connections()
-    servers = []
+    for conn in [c for c in connections if c.status == 'LISTEN']:
+        if conn.status == 'LISTEN' and conn.pid is not None:
+            if conn.pid in servers and not is_system_port(conn.laddr.port):
+                servers[conn.pid]['ports'].add(conn.laddr.port)
+            elif conn.pid not in servers:
+                try:
+                    proc = psutil.Process(conn.pid)
+                    name = proc.name()
+                    cmdline = proc.cmdline()
+                    server_type = detect_server_type(name, cmdline)
+                    if server_type and not is_system_port(conn.laddr.port):
+                        servers[conn.pid] = {
+                            'type': server_type,
+                            'display_name': name,
+                            'name': name,
+                            'ports': {conn.laddr.port},
+                            'cmdline': ' '.join(cmdline) if cmdline else 'Unknown'
+                        }
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
     
-    for conn in connections:
-        if conn.status == 'LISTEN':
-            servers.append(f"Port {conn.laddr.port}: {conn.pid if conn.pid else 'Unknown'}")
+    return servers
+
+@cli.command()
+@click.option('--action', type=click.Choice(['list', 'start', 'stop', 'restart']), default='list', help='Action to perform')
+@click.option('--name', help='Server name to act on (for start/stop/restart)')
+def servers(action, name):
+    """List running servers and their ports"""
+    if action == 'list':
+        servers = get_all_servers()
+        
+        if servers:
+            click.echo("Running servers:")
+            # Group servers by category
+            categorized_servers = {}
+            for pid, info in servers.items():
+                server_type = info['type']
+                category = 'Other Services'
+                service_type = server_type
+
+                if '|' in server_type:
+                    category, server_type = server_type.split('|')
+                if not category in categorized_servers:
+                    categorized_servers[category] = []
+                info['server_type'] = server_type
+                categorized_servers[category].append((pid, info))
+
+            for category in sorted(categorized_servers.keys()):
+                click.echo(f"\n📦 {category}:")
+                # Sort servers within category by type
+                sorted_servers = sorted(categorized_servers[category], key=lambda x: (x[1]['server_type'], x[1]['display_name']))
+                for pid, info in sorted_servers:
+                    ports_str = ', '.join(f":{port}" for port in sorted(info['ports']))
+                    ports_info = f" [Ports{ports_str}]" if ports_str else ""
+                    click.echo(f"  🔌 {info['server_type'].title()}: {info['display_name']}{ports_info}")
+                    click.echo(f"     PID: {pid}")
+                    click.echo(f"     CMD: {get_short_command(info['cmdline'].split())}")
+                    click.echo(f"   To manage: {'docker stop/start ' + info['display_name'] if 'docker-' in info['type'] else 'cliche servers --action [start|stop|restart] --name ' + info['display_name']}")
+                click.echo("")
+        else:
+            if action == 'list':
+                click.echo("Pro tip: Some services might need sudo to be visible")
+            click.echo("No servers found. Is this a desert? 🏜️")
     
-    if servers:
-        click.echo("Running servers:")
-        for server in servers:
-            click.echo(f"🔌 {server}")
     else:
-        click.echo("No servers found. Is this a desert?")
+        if not name:
+            click.echo("Error: Please specify a server name for this action")
+            return
+            
+        try:
+            result = subprocess.run(['systemctl', action, name], capture_output=True, text=True)
+            if result.returncode == 0:
+                click.echo(f"Successfully {action}ed {name}")
+            else:
+                try:
+                    # Try service command if systemctl fails
+                    result = subprocess.run(['service', name, action], capture_output=True, text=True)
+                    if result.returncode == 0:
+                        click.echo(f"Successfully {action}ed {name}")
+                    else:
+                        click.echo(f"Failed to {action} {name}. Are you root?")
+                except Exception:
+                    click.echo(f"Failed to {action} {name}. Are you root?")
+        except Exception as e:
+            click.echo(f"Error: {str(e)}")
+    
 
 @cli.command()
 @click.argument('pid', type=int)
@@ -551,6 +893,12 @@ def find(name, filetype, path):
         click.echo(f"🔍 Searching in {start_path}...")
         click.echo("Press Ctrl+C to stop the search")
         
+        # Convert to absolute paths without changing user's directory
+        if path:
+            base_dir = Path(path).resolve()
+        else:
+            base_dir = (Path.home() / '.cliche' / 'files').resolve()
+        
         # Skip system directories that could cause issues
         skip_dirs = {'/proc', '/sys', '/dev', '/run'}
         
@@ -576,3 +924,117 @@ def find(name, filetype, path):
             
     except Exception as e:
         click.echo(f"Error during search: {str(e)}")
+        
+@cli.command()
+@click.argument('prompt')
+@click.option('--type', type=click.Choice(['code', 'text', 'markdown']), required=True, help='Type of content to write')
+@click.option('--lang', help='Programming language for code files')
+@click.option('--path', help='Directory to save the file')
+@click.option('--generate', is_flag=True, help='Generate content from prompt')
+
+def write(prompt, type, lang, path, generate):
+    """Write or generate content and save to a file.
+    
+    Examples:
+    \b
+    Generate a Python script:
+        cliche write "create a web scraper" --type code --lang python --generate
+    
+    Generate a story:
+        cliche write "write a short sci-fi story" --type text --generate
+    
+    Generate a markdown document:
+        cliche write "create a project readme" --type markdown --generate
+    
+    Write direct content:
+        cliche write "Hello World" --type text
+    """
+    try:
+        # Generate content if requested
+        content = prompt
+        if generate:
+            if not prompt:
+                click.echo("Error: Please provide a prompt for content generation")
+                return
+                
+            click.echo("🤔 Generating content...")
+            assistant = CLIche()
+            
+            # Create appropriate prompt based on file type
+            if type == 'code':
+                llm_prompt = f"Write {lang} code that does the following: {prompt}. Only provide the code, no explanations."
+            elif type == 'markdown':
+                llm_prompt = f"Write a markdown document for: {prompt}. Include proper markdown formatting."
+            else:  # text
+                llm_prompt = prompt
+            
+            # Generate content
+            content = asyncio.run(assistant.ask_llm(llm_prompt))
+            
+            if not content or content.startswith("Error:"):
+                click.echo(f"Error: Failed to generate content. Please make sure you have configured a provider with 'cliche config --provider [provider] --api-key [key]'")
+                return
+        
+        # Verify we have content to write
+        if not content:
+            click.echo("Error: No content provided")
+            return
+            
+        # Convert to absolute paths without changing user's directory
+        if path:
+            base_dir = Path(path).resolve()
+        else:
+            base_dir = (Path.home() / '.cliche' / 'files').resolve()
+            
+        # Create subdirectory based on file type
+        if type == 'code':
+            save_dir = base_dir / 'code' / lang
+        else:
+            save_dir = base_dir / type
+        
+        # Create directory with proper permissions
+        save_dir.mkdir(parents=True, exist_ok=True)
+        # Set directory permissions to 755 (rwxr-xr-x)
+        save_dir.chmod(0o755)
+        
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
+        # Determine file extension and format content
+        if type == 'code':
+            if lang.lower() == 'python':
+                ext = '.py'
+                try:
+                    content = black.format_str(content, mode=black.FileMode())
+                except:
+                    pass
+            else:
+                ext = f'.{lang}'
+        elif type == 'markdown':
+            ext = '.md'
+            try:
+                content = mdformat.text(content)
+            except:
+                pass
+        else:  # text
+            ext = '.txt'
+        
+        # Create filename
+        if type == 'code':
+            filename = f"code_{lang}_{timestamp}{ext}"
+        else:
+            filename = f"{type}_{timestamp}{ext}"
+        
+        # Full file path
+        file_path = save_dir / filename
+        
+        # Write content to file
+        file_path.write_text(content)
+        # Set file permissions to 644 (rw-r--r--)
+        file_path.chmod(0o644)
+        
+        click.echo(f"✨ File created: {file_path}")
+        click.echo(f"You can open the file with your preferred editor")
+            
+    except Exception as e:
+        click.echo(f"Error creating file: {str(e)}")

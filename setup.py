@@ -17,6 +17,8 @@ setup(
         'py3nvml>=0.2.7',
         'setuptools>=58.0.4',
         'ollama>=0.2.1',
+        'black>=23.0.0',
+        'mdformat>=0.7.0',
     ],
     entry_points={
         'console_scripts': [

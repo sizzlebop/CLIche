@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Create an alias in ~/.bashrc if it doesn't exist
-if ! grep -q "alias cliche=" ~/.bashrc; then
-    echo "Adding cliche alias to ~/.bashrc..."
-    echo "alias cliche=\"$PWD/venv/bin/cliche\"" >> ~/.bashrc
-fi
 
 # Colors for output
 RED='\033[0;31m'
@@ -64,6 +59,3 @@ else
     echo -e "${RED}❌ Installation failed. Please check the error messages above.${NC}"
     exit 1
 fi
-
-# Reload shell to update PATH
-exec $SHELL
