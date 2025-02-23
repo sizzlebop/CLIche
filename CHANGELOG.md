@@ -36,6 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Special handling for JavaScript animations with HTML
   - Improved code block detection and cleanup
 
+### Changed
+- 🔧 Providers: Made system info optional in context with new `include_sys_info` parameter
+- 🎯 Roast: Removed tech-themed roasts and system info from regular roasts
+- 🔄 Roast: Increased max tokens to 300 to prevent truncated responses
+
 ## [0.1.0] - 2025-02-23
 
 ### Added
