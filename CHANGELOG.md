@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Filters out system processes and IDE-related services
   - Better categorization of unknown servers
   - Improved sorting by server type
+- 🔎 Enhanced `find` command:
+  - Now uses `fd` for faster and more powerful searching
+  - Added support for hidden files, case sensitivity, max depth
+  - Added exclude patterns support
+  - Better output formatting with icons
+  - Added helpful examples in docstring
+  - Added installation instructions if `fd` is not found
 - 🎨 Improved write command output:
   - Shows LLM's explanation/commentary in terminal
   - Only saves code to file when generating code
