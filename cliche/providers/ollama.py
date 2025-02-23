@@ -2,7 +2,7 @@
 Ollama provider implementation
 """
 import os
-from typing import Dict
+from typing import Dict, List, Tuple
 import requests
 from .base import LLMBase
 
@@ -21,7 +21,7 @@ class OllamaProvider(LLMBase):
                     "prompt": query,
                     "stream": False,
                     "options": {
-                        "num_predict": self.config.get('max_tokens', 150)
+                        "num_predict": self.config.get('max_tokens', 300)
                     }
                 }
             )
@@ -29,3 +29,20 @@ class OllamaProvider(LLMBase):
             return response.json()['response']
         except Exception as e:
             return f"Ollama Error: {str(e)}"
+
+    async def list_models(self) -> List[Tuple[str, str]]:
+        """List available Ollama models."""
+        try:
+            response = requests.get(f"{self.host}/api/tags")
+            response.raise_for_status()
+            models = []
+            for model in response.json().get('models', []):
+                models.append((
+                    model['name'],
+                    f"Local model, size: {model.get('size', 'unknown')}"
+                ))
+            return sorted(models)
+        except requests.exceptions.ConnectionError:
+            return [("Error", "Failed to connect to Ollama server")]
+        except Exception as e:
+            return [("Error", f"Failed to fetch models: {str(e)}")]

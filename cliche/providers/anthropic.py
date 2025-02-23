@@ -2,7 +2,7 @@
 Anthropic provider implementation
 """
 import os
-from typing import Dict
+from typing import Dict, List, Tuple
 import anthropic
 from .base import LLMBase
 
@@ -19,8 +19,21 @@ class AnthropicProvider(LLMBase):
                     {"role": "system", "content": self.get_system_context(include_sys_info)},
                     {"role": "user", "content": query}
                 ],
-                max_tokens=self.config.get('max_tokens', 150)
+                max_tokens=self.config.get('max_tokens', 300)
             )
             return response.content[0].text
         except Exception as e:
             return f"Anthropic Error: {str(e)}"
+
+    async def list_models(self) -> List[Tuple[str, str]]:
+        """List available Anthropic models."""
+        # Anthropic doesn't have a models list API, so we hardcode the latest models
+        models = [
+            ("claude-3.5-sonnet-20240307", "Most capable model, best for complex tasks"),
+            ("claude-3.5-haiku-20240307", "Fast and efficient model"),
+            ("claude-3.5-opus-20240307", "Research and academic writing model"),
+            ("claude-3.5-sonnet-latest", "Latest Sonnet model (auto-updates)"),
+            ("claude-3.5-haiku-latest", "Latest Haiku model (auto-updates)"),
+            ("claude-3.5-opus-latest", "Latest Opus model (auto-updates)")
+        ]
+        return models

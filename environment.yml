@@ -1,0 +1,18 @@
+name: cliche
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.8
+  - pip
+  - click>=8.0.0
+  - psutil>=5.9.0
+  - requests>=2.31.0
+  - black>=23.0.0
+  - pytest>=7.0.0
+  - pip:
+    - openai>=1.0.0
+    - anthropic>=0.7.0
+    - google-generativeai>=0.3.0
+    - py3nvml>=0.2.7
+    - pytest-asyncio>=0.21.0

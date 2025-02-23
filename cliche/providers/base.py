@@ -4,7 +4,7 @@ Base LLM provider class
 import platform
 import psutil
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Tuple
 from ..utils.gpu import get_gpu_info
 
 class LLMBase:
@@ -46,4 +46,12 @@ Please provide concise, slightly sarcastic responses."""
         return context
 
     async def generate_response(self, query: str, include_sys_info: bool = False) -> str:
+        raise NotImplementedError
+
+    async def list_models(self) -> List[Tuple[str, str]]:
+        """List available models for this provider.
+        
+        Returns:
+            List of tuples containing (model_id, description)
+        """
         raise NotImplementedError
