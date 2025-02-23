@@ -28,6 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Only saves code to file when generating code
   - Added progress indicators for better UX
   - Fixed code block extraction for more reliable results
+- ✨ Enhanced `write` command with multi-language support:
+  - Added support for Python, JavaScript, TypeScript, Ruby, Rust, Go, C++, C#, Java, PHP, Swift, Kotlin
+  - Added language aliases (py -> python, rs -> rust, etc.)
+  - Intelligent file extension mapping
+  - Language-specific code generation with proper structure
+  - Special handling for JavaScript animations with HTML
+  - Improved code block detection and cleanup
 
 ## [0.1.0] - 2025-02-23
 
