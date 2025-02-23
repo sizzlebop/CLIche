@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- ✨ Added new art commands:
+  - `art`: Generate ASCII text art with custom fonts and random patterns
+  - `ansi`: Display custom ANSI art collection
+  - Support for random art generation and specific art selection
+  - Error handling and helpful messages
 - 🔍 Improved server detection in `servers` command:
   - Now detects all processes listening on localhost ports
   - Added detection for AI/ML servers (Ollama, TensorBoard, MLflow, etc.)
@@ -49,6 +54,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Google: Updated to Gemini 1.5 models with version aliases
   - DeepSeek: Added extended context models
   - OpenRouter: Improved model filtering and sorting
+
+## [1.0.0] - 2025-02-23
+
+### Added
+- ✨ Providers: Added DeepSeek provider support
+- ✨ Providers: Added OpenRouter provider with free model access
+- 🔐 Config: Added environment variable support for API keys
+- 📝 Docs: Added .env.template for easy configuration
+- 🎨 UI: Added ANSI art and color support
+- 🛠️ Utils: Added GPU and Docker utilities
+
+### Changed
+- 🔧 Architecture: Reorganized project structure into modules
+- 🔄 Providers: Updated model lists with latest versions
+  - OpenAI: Added O-series models (4O, O3, O1)
+  - Anthropic: Updated to Claude 3.5 models (Sonnet, Haiku, Opus)
+  - Google: Updated to Gemini 1.5 models with version aliases
+  - DeepSeek: Added v1 models with extended context
+  - OpenRouter: Added free model access
+- 🎯 Core: Improved error handling and fallbacks
+- 📚 Docs: Enhanced documentation with environment setup guide
+
+### Fixed
+- 🐛 Config: Fixed model persistence in configuration
+- 🔒 Security: Improved API key handling
+- 🚀 Performance: Optimized provider initialization
 
 ## [0.1.0] - 2025-02-23
 

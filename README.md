@@ -1,4 +1,7 @@
 # CLIche
+
+🤖 A command-line interface for interacting with various LLM providers.
+
 ### A snarky, all-knowing LLM terminal assistant
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -9,6 +12,21 @@ Turn your terminal into a wise-cracking genius with a snarky, all-knowing LLM as
 
 ## Features
 
+- 🔄 Multi-provider support:
+  - OpenAI (GPT-4, GPT-3.5, O-series)
+  - Anthropic (Claude 3.5)
+  - Google (Gemini 1.5)
+  - DeepSeek (Chat, Coder, Math)
+  - OpenRouter (Free models)
+  - Ollama (Local models)
+- 🎯 Easy provider switching
+- 🔐 Secure API key management
+- 🎨 Art & ANSI support:
+  - Generate ASCII text art with custom fonts
+  - Display random ASCII art patterns
+  - Show custom ANSI art collection
+- 🛠️ GPU and Docker utilities
+- 📝 Rich configuration options
 - 🧠 Multiple LLM providers support:
   - OpenAI (GPT-4o, O3-mini)
   - Anthropic (Claude)
@@ -16,12 +34,123 @@ Turn your terminal into a wise-cracking genius with a snarky, all-knowing LLM as
   - DeepSeek
   - OpenRouter
   - Ollama (Local models)
-- 🎨 Generate random ANSI art
+- 🎨 Art commands:
+  - Generate ASCII text art with custom fonts
+  - Display random ASCII art patterns
+  - Show custom ANSI art collection
 - 🔥 Get roasted about your programming habits
 - 💻 View system information
 - 🔌 List and manage running servers
 - ⚙️ Easy configuration for API keys and model settings
 - 😏 Snarky responses included at no extra charge
+
+## Installation
+
+```bash
+# Create a virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install from PyPI
+pip install cliche-cli
+
+# Or install from source
+git clone https://github.com/sizzlebop/cliche.git
+cd cliche
+pip install -e .
+```
+
+## Configuration
+
+1. Copy the template environment file:
+```bash
+cp .env.template ~/.config/cliche/.env
+```
+
+2. Edit the `.env` file with your API keys:
+```env
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-...
+GOOGLE_API_KEY=...
+DEEPSEEK_API_KEY=...
+OPENROUTER_API_KEY=...
+```
+
+3. Configure your preferred provider:
+```bash
+cliche config provider openai
+cliche config model gpt-4
+```
+
+## Usage
+
+```bash
+# Chat with your AI assistant
+cliche ask "What's the meaning of life?"
+
+# Configure your provider
+cliche config provider openai
+cliche config key YOUR_API_KEY
+
+# List available models
+cliche models
+
+# Generate ASCII art
+cliche art "Hello"  # Create text art
+cliche art --font block "Cool"  # Use specific font
+cliche art --random  # Show random art pattern
+
+# Display ANSI art
+cliche ansi  # Show random art from collection
+cliche ansi --index 0  # Show specific art piece
+
+# Get roasted
+cliche roastme
+
+# View system info
+cliche system
+
+# List running servers
+cliche servers
+
+# Kill a process
+cliche kill PID
+```
+
+## Development
+
+```bash
+# Create conda environment
+conda env create -f environment.yml
+
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Format code
+black cliche/
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m '✨ feat: Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Thanks to all the LLM providers for their amazing APIs
+- Special thanks to the open-source community
+
+Made with ❤️ by Pink Pixel
 
 ## Quick Install
 
@@ -37,23 +166,6 @@ chmod +x install.sh
 # Load the alias
 source ~/.bashrc
 ```
-
-## Configuration
-
-Configure your preferred LLM provider:
-
-```bash
-# Use OpenAI
-cliche config --provider openai --api-key your-api-key-here
-
-# Use Anthropic
-cliche config --provider anthropic --api-key your-api-key-here
-
-# Use local models with Ollama
-cliche config --provider ollama --model codellama  # or any other model
-```
-
-Configuration is stored in `~/.config/cliche/config.json`.
 
 ## Environment Variables
 
@@ -88,38 +200,6 @@ cliche config --provider anthropic --model claude-3.5-sonnet-20240307
 ```
 
 The API keys will be automatically loaded from your `.env` file.
-
-## Usage
-
-### Ask Questions
-```bash
-cliche ask "How do I reverse a linked list in Python?"
-cliche ask "What's the meaning of life?"
-```
-
-### Generate ANSI Art
-```bash
-cliche ansi
-```
-
-### Get Roasted
-```bash
-cliche roastme
-```
-
-### System Information
-```bash
-cliche sysinfo
-```
-
-### Server Management
-```bash
-# List running servers
-cliche servers
-
-# Kill a process
-cliche kill 1234  # Replace with actual PID
-```
 
 ## LLM Provider Setup
 
@@ -213,11 +293,3 @@ Ollama runs locally on your machine, so no API keys are needed!
    - Clear model cache if using Ollama
 
 For more detailed troubleshooting, visit our [Wiki](https://github.com/yourusername/cliche/wiki).
-
-## Contributing
-
-Found a bug? Have a feature idea? Want to make it even snarkier? Pull requests welcome!
-
-## License
-
-MIT License - Feel free to use it, just don't blame me for any hurt feelings from the roasts.
