@@ -8,7 +8,7 @@ from .commands.process import kill
 from .commands.ask import ask
 from .commands.file import rename, find, write
 from .commands.system import system
-from .commands.ansi import ansi
+from .commands.art import art
 from .commands.roast import roastme
 
 cli.add_command(config)
@@ -20,7 +20,7 @@ cli.add_command(rename)
 cli.add_command(find)
 cli.add_command(write)
 cli.add_command(system)
-cli.add_command(ansi)
+cli.add_command(art)
 cli.add_command(roastme)
 
 __version__ = "0.1.0"
