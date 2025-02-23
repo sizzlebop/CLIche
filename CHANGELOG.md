@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
+### Added
+- 🔍 Improved server detection in `servers` command:
+  - Now detects all processes listening on localhost ports
+  - Added detection for AI/ML servers (Ollama, TensorBoard, MLflow, etc.)
+  - Added detection for development servers and generic servers
+  - Shows ports even for unknown servers
+  - Filters out system processes and IDE-related services
+  - Better categorization of unknown servers
+  - Improved sorting by server type
 - 🎨 Improved write command output:
   - Shows LLM's explanation/commentary in terminal
   - Only saves code to file when generating code
