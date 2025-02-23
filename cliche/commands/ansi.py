@@ -9,7 +9,7 @@ from ..core import cli
 @cli.command()
 @click.option('--index', '-i', type=int, help='Index of art to display')
 def ansi(index: int = None):
-    """Display cool ANSI art from our collection!"""
+    """Display ANSI art"""
     if index is not None and 0 <= index < len(ANSI_ART):
         click.echo(ANSI_ART[index])
     else:

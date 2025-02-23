@@ -14,12 +14,24 @@ def config(provider: Optional[str], api_key: Optional[str], model: Optional[str]
     """Configure CLIche settings"""
     config = Config()
     
+    # Handle all updates at once
     if provider:
         config.config['active_provider'] = provider
-    if api_key and provider:
-        config.config['providers'][provider]['api_key'] = api_key
-    if model and provider:
-        config.config['providers'][provider]['model'] = model
+        
+        # Update model if provided
+        if model:
+            config.config['providers'][provider]['model'] = model
+            
+        # Update API key if provided
+        if api_key:
+            config.config['providers'][provider]['api_key'] = api_key
+    elif model or api_key:
+        # If no provider specified, use active provider
+        active_provider = config.config['active_provider']
+        if model:
+            config.config['providers'][active_provider]['model'] = model
+        if api_key:
+            config.config['providers'][active_provider]['api_key'] = api_key
 
     config.save_config(config.config)
     click.echo("✨ Configuration updated. I'll try to be less judgy (no promises).")

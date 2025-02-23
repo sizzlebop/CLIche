@@ -12,4 +12,6 @@ Requires-Dist: asyncio>=3.4.3
 Requires-Dist: py3nvml>=0.2.7
 Requires-Dist: setuptools>=58.0.4
 Requires-Dist: ollama>=0.2.1
+Requires-Dist: black>=23.0.0
+Requires-Dist: mdformat>=0.7.0
 Dynamic: requires-dist
