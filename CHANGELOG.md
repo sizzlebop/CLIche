@@ -35,6 +35,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Language-specific code generation with proper structure
   - Special handling for JavaScript animations with HTML
   - Improved code block detection and cleanup
+- ✨ Providers: Added DeepSeek provider support
+- ✨ Providers: Added OpenRouter provider support
+- 🔍 Models: Enhanced models command to list available models for all providers
+
+### Changed
+- 🔧 Providers: Made system info optional in context with new `include_sys_info` parameter
+- 🎯 Roast: Removed tech-themed roasts and system info from regular roasts
+- 🔄 Roast: Increased max tokens to 300 to prevent truncated responses
+- 📝 Models: Updated model lists with latest versions for all providers
+  - OpenAI: Added O-series models (4O, O3, O1)
+  - Anthropic: Updated to Claude 3.5 models (Sonnet, Haiku, Opus)
+  - Google: Updated to Gemini 1.5 models with version aliases
+  - DeepSeek: Added extended context models
+  - OpenRouter: Improved model filtering and sorting
 
 ## [0.1.0] - 2025-02-23
 

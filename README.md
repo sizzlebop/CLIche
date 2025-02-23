@@ -55,6 +55,40 @@ cliche config --provider ollama --model codellama  # or any other model
 
 Configuration is stored in `~/.config/cliche/config.json`.
 
+## Environment Variables
+
+You can store your API keys in a `.env` file located at `~/.config/cliche/.env`. This allows you to easily switch between different providers without having to reconfigure API keys each time.
+
+Copy the `.env.template` file to `~/.config/cliche/.env` and fill in your API keys:
+
+```bash
+mkdir -p ~/.config/cliche
+cp .env.template ~/.config/cliche/.env
+```
+
+Then edit the `.env` file with your API keys:
+
+```env
+# API Keys for different providers
+OPENAI_API_KEY=your_openai_key_here
+ANTHROPIC_API_KEY=your_anthropic_key_here
+GOOGLE_API_KEY=your_google_key_here
+DEEPSEEK_API_KEY=your_deepseek_key_here
+OPENROUTER_API_KEY=your_openrouter_key_here
+
+# Optional configurations
+OLLAMA_HOST=http://localhost:11434
+```
+
+Once configured, you can easily switch between providers and models:
+
+```bash
+cliche config --provider openai --model gpt-4o
+cliche config --provider anthropic --model claude-3.5-sonnet-20240307
+```
+
+The API keys will be automatically loaded from your `.env` file.
+
 ## Usage
 
 ### Ask Questions
