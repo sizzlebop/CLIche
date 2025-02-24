@@ -15,7 +15,7 @@ def get_file_size_str(size: int) -> str:
     else:
         return f"{size/1024/1024:.1f}MB"
 
-def get_output_dir(type: Literal['code', 'write']) -> Path:
+def get_output_dir(type: Literal['code', 'write', 'scrape']) -> Path:
     """Get the output directory for generated files."""
     # Get user's home directory
     home = Path.home()
@@ -49,49 +49,70 @@ def save_code_to_file(content: str, path: str) -> None:
         os.chmod(path, 0o755)
 
 def clean_text_content(content: str) -> str:
-    """Clean text content for file saving.
+    """Clean text content for saving."""
+    # Remove multiple newlines
+    content = re.sub(r'\n{3,}', '\n\n', content)
     
-    - Normalize line endings to \n
-    - Remove any zero-width spaces or other invisible characters
-    - Ensure proper spacing around headers
-    - Remove any BOM if present
-    """
-    # Remove BOM if present
-    content = content.replace('\ufeff', '')
+    # Remove trailing whitespace
+    content = '\n'.join(line.rstrip() for line in content.splitlines())
+    
+    # Ensure single newline at end
+    content = content.strip() + '\n'
+    
+    return content
+
+def clean_content(content: str) -> str:
+    """Clean content for saving to file."""
+    # Remove invisible characters
+    content = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', content)
     
     # Normalize line endings
     content = content.replace('\r\n', '\n').replace('\r', '\n')
     
-    # Remove zero-width spaces and other invisible characters
-    content = re.sub(r'[\u200B-\u200D\uFEFF]', '', content)
+    # Remove multiple newlines
+    content = re.sub(r'\n{3,}', '\n\n', content)
     
-    # Ensure headers have proper spacing (for markdown)
-    content = re.sub(r'(?m)^(#+)([^ \n])', r'\1 \2', content)
+    # Remove trailing whitespace
+    content = '\n'.join(line.rstrip() for line in content.splitlines())
     
-    # Ensure exactly one newline at the end
-    content = content.rstrip('\n') + '\n'
+    # Ensure single newline at end
+    content = content.strip() + '\n'
     
     return content
 
-def save_text_to_file(content: str, path: str) -> None:
-    """Save text content to a file.
+def save_content_to_file(content: str, file_type: str, file_name: str, category: str = 'write') -> str:
+    """Save content to a file with proper extension and return the path."""
+    # Clean the content
+    content = clean_content(content)
     
-    Args:
-        content: The text content to save
-        path: Path where to save the file
-    """
+    # Get the output directory
+    output_dir = get_output_dir(category)
+    
+    # Add extension if not present
+    if not file_name.endswith(f'.{file_type}'):
+        file_name = f"{file_name}.{file_type}"
+    
+    # Create full path
+    file_path = output_dir / file_name
+    
+    # Save the content
+    with open(file_path, 'w') as f:
+        f.write(content)
+    
+    return str(file_path)
+
+def save_text_to_file(content: str, path: str) -> None:
+    """Save text content to a file."""
     # Clean the content
     content = clean_text_content(content)
     
-    # Write content with UTF-8 encoding and LF line endings
-    with open(path, 'w', encoding='utf-8', newline='\n') as f:
+    # Write the content
+    with open(path, 'w') as f:
         f.write(content)
-    
-    # Set file mode to 644 (rw-r--r--)
-    os.chmod(path, 0o644)
 
 def extract_code_blocks(text: str, lang: Optional[str] = None) -> List[str]:
-    """Extract code blocks from text.
+    """
+    Extract code blocks from text.
     
     Args:
         text: The text to extract code blocks from
@@ -100,13 +121,11 @@ def extract_code_blocks(text: str, lang: Optional[str] = None) -> List[str]:
     Returns:
         List of code blocks found in the text
     """
-    if lang:
-        # Look for code blocks with the specified language
-        blocks = re.findall(rf'```{lang}\n?(.*?)\n?```', text, re.DOTALL)
-        if not blocks:
-            # Fallback to any code blocks if none found with specified language
-            blocks = re.findall(r'```\n?(.*?)\n?```', text, re.DOTALL)
-    else:
-        # Get all code blocks
-        blocks = re.findall(r'```\n?(.*?)\n?```', text, re.DOTALL)
-    return blocks
+    # Pattern to match code blocks with or without language
+    pattern = r'```(?:' + (lang or '[^\n]*') + r')?\n(.*?)\n```'
+    
+    # Find all code blocks
+    blocks = re.findall(pattern, text, re.DOTALL)
+    
+    # Clean and return the blocks
+    return [block.strip() for block in blocks]

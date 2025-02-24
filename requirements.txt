@@ -4,16 +4,21 @@ openai>=1.0.0
 anthropic>=0.7.0
 google-generativeai>=0.3.0
 art>=6.0
+crawl4ai>=0.4.3
 
 # System utilities
 psutil>=5.9.0
 py3nvml>=0.2.7
 
-# HTTP client
+# HTTP client & web scraping
 requests>=2.31.0
+beautifulsoup4>=4.12.0
+html2text>=2024.2.26
+duckduckgo-search>=2.8.6
 
-# Markdown support
+# Markdown & file handling
 rich>=13.0.0
+mdformat>=0.7.0
 
 # Development dependencies
 black>=23.0.0

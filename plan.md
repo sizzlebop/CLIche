@@ -1,110 +1,152 @@
-Decide on your features: Should it handle API queries (like OpenAI) or run a local LLM (think GPT4All/llama.cpp)?
-Outline the commands and options (e.g., help queries, troubleshooting commands, etc.).
-Sketch out a simple user flow: you type a command, the app sends your query, and voila—instant advice.
-Set Up Your Development Environment
+# CLIche Development Plan 🚀
 
-Create a Python virtual environment (because messy systems are so 2005).
-Install essential packages like Click (or argparse if you're feeling old-school), requests (for API calls), and any libraries needed for your chosen LLM integration.
-Design Your CLI Interface
+## Core Features ✨
 
-Use a CLI framework (Click is slick and concise) to handle command parsing.
-Define commands like:
-@click.command()
-@click.argument('query', nargs=-1)
-def ask(query):
-    # Code to process the query
-Make sure your CLI is intuitive—if a toddler can type it, you're golden.
-Integrate the LLM
+### Command Structure
+- [x] Basic CLI framework with Click
+- [x] Multi-provider support
+- [x] Provider configuration
+- [x] Model selection
+- [x] Command system:
+  - [x] Code generation command
+  - [x] Text generation command
+  - [x] File viewer command
+  - [x] Art commands
+  - [x] System utilities
+  - [x] Server management
 
-API Approach:
-Write a function that sends your query to the API (e.g., OpenAI’s endpoint) and handles responses.
-Manage API keys securely (env variables, config files, etc.).
-Local Model Approach:
-Integrate with a local model runner (like llama.cpp) by either calling a subprocess or using a Python binding.
-Ensure model files are properly referenced and loaded.
-Process Queries and Display Responses
+### File Management
+- [x] Organized file structure:
+  - [x] `~/.cliche/files/code/` for code files
+  - [x] `~/.cliche/files/write/` for text files
+- [x] Smart file naming
+- [x] File type detection
+- [x] Proper file permissions
 
-Once you get the LLM response, format it nicely for terminal output.
-Handle edge cases, like empty queries or network errors, with friendly error messages (snark included).
-Implement Logging and Error Handling
+### LLM Integration
+- [x] OpenAI support
+- [x] Anthropic support
+- [x] Google support
+- [x] DeepSeek support
+- [x] OpenRouter support
+- [x] Ollama support
+- [x] Async response handling
+- [x] Error handling
+- [x] Progress indicators
 
-Use Python’s logging module to capture errors and debugging info—because even geniuses have bugs.
-Ensure your app fails gracefully when things go south (hint: add try/except blocks liberally).
-Testing and Debugging
+### Content Generation
+- [x] Code generation:
+  - [x] Multiple language support
+  - [x] Language-specific prompts
+  - [x] Code block extraction
+  - [x] File extension mapping
+- [x] Text generation:
+  - [x] Markdown support
+  - [x] HTML support
+  - [x] Plain text support
+  - [x] Format-specific prompts
 
-Write unit tests for your functions and CLI commands.
-Manually test various queries in your terminal to ensure everything works as intended.
-Debug with your favorite tools until your app is smoother than your best comeback.
-Package and Distribute
+### User Experience
+- [x] Clear error messages
+- [x] Progress indicators
+- [x] File previews
+- [x] Command help text
+- [x] Rich markdown rendering
 
-Package your CLI app (think setuptools or poetry) so you can install it system-wide or share it with your crew on GitHub.
-Consider creating an executable script or alias for easy terminal access.
-Documentation and User Guide
+## Upcoming Features 🎯
 
-Craft a snarky yet clear README explaining installation, usage, and configuration.
-Include usage examples like:
+### Content Generation
+- [ ] Template support
+- [ ] Custom prompts
+- [ ] Project scaffolding
+- [ ] Multiple file generation
 
-$ cliche "How do I make a virtual environment in Python?"
-Add tips, tricks, and maybe a couple of easter eggs (bonus points if they're as witty as you are).
-Iterate and Enhance
+### File Management
+- [ ] File cleanup command
+- [ ] File listing command
+- [ ] File search command
+- [ ] File organization options
 
-Gather user feedback
-Add features like configuration options, updates for new LLMs, and perhaps a "sassy mode" toggle for extra snark.
+### User Experience
+- [ ] Interactive mode
+- [ ] Command history
+- [ ] Tab completion
+- [ ] Configuration wizard
 
-"""
-cliche: Your Terminal's Snarky, All-Knowing LLM Assistant
+### Documentation
+- [ ] API documentation
+- [ ] Developer guide
+- [ ] Contributing guide
+- [ ] FAQ
 
-Overview:
-  This project turns your terminal into a genius-level oracle that responds
-  to your command line queries. Need to know how to set up a Python virtualenv?
-  Just type your question, and this bad boy will spit out the wisdom you crave.
+## Future Ideas 💡
 
-Features:
-  - Intuitive CLI with Click
-  - Plug-and-play integration with an LLM (API or local)
-  - Witty error messages and one-liners (because life’s too short for boring outputs)
-  - Easy configuration for API keys and model settings
+1. **Project Templates**
+   - Scaffolding for common project types
+   - Custom template support
+   - Template sharing
 
-Setup:
-  1. Create a virtual environment:
-       $ python3 -m venv env
-  2. Activate it:
-       $ source env/bin/activate
-  3. Install required packages:
-       $ pip install click requests
-  4. Run the CLI oracle:
-       $ python cli_oracle.py "How do I make a virtual environment in Python?"
+2. **Enhanced Code Generation**
+   - Test generation
+   - Documentation generation
+   - Code review suggestions
+   - Refactoring assistance
 
-Timport click
-import requests  # For API calls; swap out or extend for local LLM integration
-import os
+3. **Collaboration Features**
+   - Share generated content
+   - Team configurations
+   - Version control integration
 
-@click.command()
-@click.argument('query', nargs=-1)
-def ask(query):
-    """
-    Ask the Oracle a question directly from your terminal.
-    Example: python cli_oracle.py "How do I create a virtual environment in Python?"
-    """
-    if not query:
-        click.echo("Error: No query provided, genius. Please type something!")
-        return
+4. **Advanced File Management**
+   - Version history
+   - Backup/restore
+   - Cloud sync options
 
-    query_str = " ".join(query)
-    click.echo(f"Oracle is pondering: {query_str}")
+5. **UI Enhancements**
+   - TUI interface
+   - Code preview with syntax highlighting
+   - Interactive file browser
 
-    # TODO: Replace this mock response with your LLM integration.
-    # For an API, you might use requests.post() to hit your endpoint.
-    # For a local model, consider invoking a subprocess or library call.
-    response = "Hint: Always use python3 -m venv env to create a virtual environment. Boom!"
-    
-    click.echo(response)
+## Development Guidelines 📝
 
-if __name__ == '__main__':
-    ask()
-Drop this prompt into your IDE, make a few tweaks, and soon your terminal will be dishing out code wisdom like a rebel professor. Happy coding, sizzlebop!
+1. **Code Quality**
+   - Follow PEP 8
+   - Write comprehensive tests
+   - Document all functions
+   - Use type hints
 
+2. **User Experience**
+   - Clear error messages
+   - Helpful command help
+   - Consistent interface
+   - Progressive disclosure
 
+3. **Documentation**
+   - Keep README updated
+   - Document new features
+   - Update CHANGELOG
+   - Maintain MEMORIES.md
 
+4. **Testing**
+   - Unit tests
+   - Integration tests
+   - User acceptance testing
+   - Performance testing
 
+## Project Status 📊
 
+- **Current Phase**: Beta
+- **Latest Version**: 0.1.0
+- **Stability**: Good
+- **Test Coverage**: Partial
+
+## Next Steps 👣
+
+1. [ ] Add file management commands
+2. [ ] Improve test coverage
+3. [ ] Add template support
+4. [ ] Create developer documentation
+5. [ ] Implement tab completion
+
+---
+Made with ❤️ by Pink Pixel
