@@ -4,6 +4,7 @@ import asyncio
 import click
 from pathlib import Path
 from typing import Optional
+from ..utils.file import get_output_dir
 
 SCRAPE_OUTPUT_DIR = os.path.expanduser("~/.cliche/files/scrape")
 
@@ -50,9 +51,6 @@ def generate(topic: str, format: str, path: Optional[str]):
         cliche generate "Machine Learning" --format markdown
         cliche generate "Python async" --format html --path ./my_doc.html
     """
-    # Import here to avoid circular import
-    from ..commands.write import async_write
-    
     click.echo(f"📖 Using scraped data for topic: {topic}...")
 
     json_filename = f"{topic.replace(' ', '_').lower()}.json"
@@ -83,6 +81,23 @@ def generate(topic: str, format: str, path: Optional[str]):
     prompt = f"Generate a comprehensive document about {topic} using this structured content as source material:\n\n{formatted_content}"
     
     click.echo("🔄 Generating document...")
+    # Pass data to the LLM for a proper structured summary
+    if not path:
+        # Create a default path in the docs directory
+        # Get format-specific extension
+        if format == 'markdown':
+            ext = '.md'
+        elif format == 'html':
+            ext = '.html'
+        else:
+            ext = f'.{format}'
+            
+        filename = f"{topic.replace(' ', '_').lower()}{ext}"
+        output_dir = get_output_dir('docs')
+        path = str(output_dir / filename)
+        
+    # Import here to avoid circular import
+    from ..commands.write import async_write
     asyncio.run(async_write((prompt,), format, path))
 
 if __name__ == "__main__":

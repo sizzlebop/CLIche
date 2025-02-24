@@ -32,20 +32,21 @@ async def async_write(prompt: tuple[str, ...], format: str, path: Optional[str])
     # Join the prompt parts
     full_prompt = ' '.join(prompt)
     
-    # Determine file extension
-    ext = {
-        'text': '.txt',
-        'markdown': '.md',
-        'html': '.html'
-    }[format]
+    # Get format-specific extension
+    if format == 'markdown':
+        ext = '.md'
+    elif format == 'html':
+        ext = '.html'
+    else:
+        ext = f'.{format}'
     
     # Get default filename if path not provided
     if not path:
         # Create a filename from the first few words of the prompt
         words = full_prompt.lower().split()[:3]
         filename = '_'.join(words) + ext
-        # Use the .cliche/files/write directory
-        output_dir = get_output_dir('write')
+        # Use the .cliche/files/docs directory
+        output_dir = get_output_dir('docs')
         path = str(output_dir / filename)
     
     # Add format-specific instructions
