@@ -43,6 +43,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✨ Providers: Added DeepSeek provider support
 - ✨ Providers: Added OpenRouter provider support
 - 🔍 Models: Enhanced models command to list available models for all providers
+- ✨ Split write command into two separate commands:
+  - `code`: Simplified code generation with `cliche code make me a game --lang python`
+  - `write`: Simplified text generation with `cliche write a tutorial on docker --type markdown`
+  - Both commands handle async generation and file saving
+  - Improved error handling and progress indicators
+  - Smart file naming based on prompt content
 
 ### Changed
 - 🔧 Providers: Made system info optional in context with new `include_sys_info` parameter

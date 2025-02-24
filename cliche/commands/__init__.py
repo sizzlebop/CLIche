@@ -1,14 +1,29 @@
 """
 CLI commands
 """
-from .ask import ask
-from .art import art
 from .ansi import ansi
-from .roast import roastme
-from .system import system
-from .process import kill
-from .server import servers
-from .file import rename, find, write
+from .art import art
+from .ask import ask
+from .code import code
 from .config import config, models
+from .process import kill
+from .roast import roastme
+from .server import servers
+from .system import system
+from .view import view
+from .write import write
 
-__all__ = ['ask', 'art', 'ansi', 'roastme', 'system', 'kill', 'servers', 'rename', 'find', 'write', 'config', 'models']
+__all__ = [
+    'ansi',
+    'art',
+    'ask',
+    'code',
+    'config',
+    'kill',
+    'models',
+    'roastme',
+    'servers',
+    'system',
+    'view',
+    'write'
+]

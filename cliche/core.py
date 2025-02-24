@@ -199,6 +199,11 @@ class CLIche:
         include_sys_info = self._should_include_system_info(query)
         return await self.provider.generate_response(query, include_sys_info)
 
+def get_llm():
+    """Get the current LLM instance."""
+    cliche = CLIche()
+    return cliche.provider
+
 @click.group()
 def cli():
     """CLIche: Your terminal's snarky genius assistant"""
