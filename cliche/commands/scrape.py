@@ -1,242 +1,203 @@
 import os
+import json
 import asyncio
 import click
 from urllib.parse import urljoin, urlparse
 from crawl4ai import AsyncWebCrawler, CrawlerRunConfig
-import html2text
+from crawl4ai.extraction_strategy import LLMExtractionStrategy
+from pydantic import BaseModel, Field
+from ..core import CLIche
+from bs4 import BeautifulSoup
+from pathlib import Path
 
-def get_output_filename(url: str) -> str:
-    """Generate a filename from the URL."""
-    # Remove protocol and domain
-    path = url.split('/')[-1] if url.endswith('/') else url.split('/')[-1]
-    # Convert to lowercase and replace special chars with underscores
-    filename = path.lower().replace(' ', '_').replace('-', '_')
-    return f"{filename}.md"
+# --- Structured Data Schema ---
+class ScrapedData(BaseModel):
+    title: str = Field(..., description="Title of the page.")
+    description: str = Field(..., description="A brief summary of the page.")
+    main_content: str = Field(..., description="Main body of the article or page.")
 
+# --- Helper Functions ---
 def is_same_domain(url1: str, url2: str) -> bool:
-    """Check if two URLs belong to the same domain."""
-    domain1 = urlparse(url1).netloc
-    domain2 = urlparse(url2).netloc
-    return domain1 == domain2
+    return urlparse(url1).netloc == urlparse(url2).netloc
 
-def is_nav_link(content: str, url: str) -> bool:
-    """Check if a link appears to be a navigation link."""
-    # Common patterns for navigation links
-    nav_patterns = [
-        'Skip to main content',
-        'Open Menu',
-        'Open Sidebar',
-        'Close Search Bar',
-        'Open Search Bar',
-        'Select language',
-        'Sign up',
-        'Log in',
-        'Request account',
-        'View source',
-        'View history',
-        'Recent changes',
-        'Random page',
-        'Help',
-        'Special pages',
-        'Privacy policy',
-        'About',
-        'Disclaimers',
-        'Powered by',
-        'Creative Commons',
-        'Tools',
-        'Navigation',
-        'Personal tools',
-        'Namespaces',
-        'Views',
-        'Search',
-        'Wiki Tools',
-        'Discussion',
-        'Talk:',
-        'Special:',
-        'File:',
-        'User:',
-        'Template:',
-        'Category:',
-        'MediaWiki:',
-        'action=edit',
-        'action=history',
-        'oldid=',
-        'diff=',
-        'redlink=1'
-    ]
-    
-    # Also check URL patterns
-    url_patterns = [
-        'Special:',
-        'File:',
-        'Talk:',
-        'User:',
-        'Template:',
-        'Category:',
-        'MediaWiki:',
-        'action=edit',
-        'action=history',
-        'oldid=',
-        'diff=',
-        'redlink=1'
-    ]
-    
-    # Check if any pattern matches the content
-    if any(pattern.lower() in content.lower() for pattern in nav_patterns):
-        return True
-        
-    # Check if any pattern matches the URL
-    if any(pattern.lower() in url.lower() for pattern in url_patterns):
-        return True
-        
-    return False
+def is_relevant_content(text: str, topic: str) -> bool:
+    """Check if extracted text is relevant to the topic."""
+    topic_words = set(topic.lower().split())
+    return any(word in text.lower() for word in topic_words)
 
-def is_relevant_link(text: str, url: str, topic: str | None = None) -> bool:
-    """Check if a link is relevant to the topic we're interested in."""
-    if not topic:
-        return True
-        
-    # Convert everything to lowercase for comparison
-    text = text.lower()
-    topic = topic.lower()
-    url = url.lower()
-    
-    # Split topic into words for more flexible matching
-    topic_words = set(topic.split())
-    
-    # Check if any topic word appears in the text or URL
-    return any(word in text or word in url for word in topic_words)
-
-def extract_links_from_markdown(content: str, base_url: str, topic: str | None = None) -> list[str]:
-    """Extract markdown links and convert them to full URLs."""
-    links = []
-    lines = content.split('\n')
-    for line in lines:
-        # Skip navigation-like links
-        if is_nav_link(line, base_url):
-            continue
-            
-        # Look for markdown links [text](url)
-        start = 0
-        while True:
-            start = line.find('](', start)
-            if start == -1:
-                break
-            end = line.find(')', start)
-            if end == -1:
-                break
-                
-            # Extract the link text and URL
-            text_start = line.rfind('[', 0, start)
-            if text_start == -1:
-                start = end + 1
-                continue
-                
-            link_text = line[text_start+1:start]
-            url = line[start+2:end].strip()
-            
-            # Skip navigation links
-            if is_nav_link(link_text, base_url):
-                start = end + 1
-                continue
-                
-            # Skip irrelevant links if we have a topic
-            if not is_relevant_link(link_text, url, topic):
-                start = end + 1
-                continue
-                
-            # Convert relative URLs to absolute
-            if url.startswith('/'):
-                url = urljoin(base_url, url)
-            if url.startswith('http'):  # Only keep http(s) URLs
-                links.append(url)
-            start = end + 1
-    return links
-
-async def scrape_page(crawler: AsyncWebCrawler, url: str, base_url: str, visited: set, topic: str | None = None) -> tuple[str, list[str]]:
-    """Scrape a single page and return its content and any found links."""
+# --- Scraping Logic ---
+async def scrape_page(crawler, url, base_url, visited, topic):
+    """Scrape a page and return structured data if relevant."""
     try:
         config = CrawlerRunConfig(
-            page_timeout=60000,  # Wait up to 60 seconds
-            wait_until='load',  # Just wait for page load
-            scan_full_page=True,  # Get everything
-            magic=False,  # Turn off magic mode
-            wait_for_images=False,  # Don't wait for images
-            excluded_tags=[],  # Don't exclude any tags
-            word_count_threshold=0,  # No minimum word count
-            exclude_external_links=False,  # Don't exclude external links
-            exclude_social_media_links=False,  # Don't exclude social links
-            remove_overlay_elements=False  # Don't remove overlays
+            page_timeout=60000,
+            wait_until='load',
+            scan_full_page=True,
+            magic=False,
+            word_count_threshold=50,  # Ignore tiny pages
         )
         
-        result = await crawler.arun(url=url, config=config)
-        if not result or not result.cleaned_html:
-            return "", []
-        
-        # Convert HTML to markdown
-        h = html2text.HTML2Text()
-        h.ignore_links = False
-        h.body_width = 0
-        content = h.handle(result.cleaned_html)
-        
-        # Extract links from markdown content
-        links = extract_links_from_markdown(content, base_url, topic)
-        
-        return content, links
-    except Exception as e:
-        click.echo(f"⚠️  Error scraping {url}: {str(e)}")
-        return "", []
-
-async def async_scrape(url: str, topic: str | None = None):
-    """Scrape content from a URL and all its linked pages."""
-    try:
-        # Create output directory if it doesn't exist
-        output_dir = os.path.expanduser("~/.cliche/files/scrape")
-        os.makedirs(output_dir, exist_ok=True)
-        
-        visited = set()
-        to_visit = [url]
-        all_content = []
-        
-        async with AsyncWebCrawler() as crawler:
-            while to_visit and len(visited) < 100:  # Limit to 100 pages max
-                current_url = to_visit.pop(0)
+        # Get the current CLIche configuration
+        try:
+            cliche = CLIche()
+            provider_name = cliche.config.config.get("active_provider")
+            if not provider_name:
+                raise ValueError("No active provider configured")
                 
-                if current_url in visited:
-                    continue
+            provider_config = cliche.config.get_provider_config(provider_name)
+            if not provider_config:
+                raise ValueError(f"No configuration found for provider '{provider_name}'")
+                
+            model = provider_config.get("model")
+            if not model:
+                raise ValueError(f"No model specified for provider '{provider_name}'")
+        except Exception as e:
+            raise click.UsageError(f"Configuration error: {str(e)}")
+            
+        try:
+            # First get the raw content
+            result = await crawler.arun(url=url, config=config)
+            if not result or not result.cleaned_html:
+                click.echo(f"⚠️ Failed to fetch content from {url}")
+                return None, []
+                
+            # Extract main content using BeautifulSoup
+            soup = BeautifulSoup(result.cleaned_html, 'lxml')
+            
+            # Remove unwanted elements
+            for element in soup.select('nav, header, footer, .sidebar, .ads, script, style, iframe, form'):
+                element.decompose()
+                
+            # Get the main content - try multiple strategies
+            main_content = None
+            for selector in ['main article', 'main', 'article', '.main-content', '#content', '.content', '[role="main"]']:
+                main_content = soup.select_one(selector)
+                if main_content and len(str(main_content)) > 500:  # Must be substantial content
+                    break
                     
-                click.echo(f"📄 Scraping page {len(visited) + 1}: {current_url}")
+            # If no main content found, try to get the largest content block
+            if not main_content:
+                content_blocks = []
+                for tag in soup.find_all(['div', 'section']):
+                    # Skip if it's likely navigation or sidebar
+                    if any(cls in (tag.get('class', []) or []) for cls in ['nav', 'menu', 'sidebar', 'footer']):
+                        continue
+                    content_blocks.append((len(str(tag)), tag))
+                if content_blocks:
+                    main_content = max(content_blocks, key=lambda x: x[0])[1]
                 
-                content, links = await scrape_page(crawler, current_url, url, visited, topic)
-                visited.add(current_url)
+            if not main_content:
+                main_content = soup.body
                 
-                if content.strip():  # Only add non-empty content
-                    all_content.append(f"# {current_url}\n\n{content}")
+            if not main_content:
+                click.echo(f"⚠️ Could not find main content in {url}")
+                return None, []
                 
-                # Add new links to visit
-                for link in links:
-                    if link not in visited and is_same_domain(url, link):
-                        to_visit.append(link)
+            # Get the title
+            title = soup.title.string if soup.title else ""
+            if not title:
+                for selector in ['h1.article-title', 'h1.title', 'h1']:
+                    title_elem = soup.select_one(selector)
+                    if title_elem:
+                        title = title_elem.get_text(strip=True)
+                        break
+                        
+            # Clean up the content
+            for tag in main_content.find_all(['a', 'img']):
+                # Convert relative URLs to absolute
+                if 'href' in tag.attrs:
+                    tag['href'] = urljoin(url, tag['href'])
+                if 'src' in tag.attrs:
+                    tag['src'] = urljoin(url, tag['src'])
+                    
+            # Create extraction strategy for the cleaned content
+            extraction_strategy = LLMExtractionStrategy(
+                provider=f"{provider_name}/{model}",  # Format: provider/model
+                schema=ScrapedData.schema(),
+                extraction_type="schema",
+                instruction=f"""Extract structured data about '{topic}' from this page.
+                The response should be in JSON format with these fields:
+                - title: {title if title else 'The main title of the article'}
+                - description: A brief summary of what the article is about
+                - main_content: The actual article content, formatted as markdown.
+                
+                Important:
+                1. Include ALL relevant code examples and technical details
+                2. Keep the original structure with headings and sections
+                3. Preserve code blocks and their syntax
+                4. Include key concepts and explanations
+                5. Make sure to capture the full depth of the technical content"""
+            )
             
-            if not all_content:
-                click.echo("❌ No content was found to save")
-                return
+            # Extract structured data using LLM
+            extracted_data = extraction_strategy.extract(url=url, ix=0, html=str(main_content))
+            if not extracted_data:
+                click.echo(f"⚠️ No structured data could be extracted from {url}")
+                return None, []
                 
-            # Save all content
-            output_path = os.path.join(output_dir, get_output_filename(url))
-            with open(output_path, "w", encoding="utf-8") as f:
-                f.write("\n\n---\n\n".join(all_content))
-            
-            click.echo(f"\n\n✨ Scraped {len(visited)} pages, saved to {output_path}")
-            
+            # Get the first block since we're using schema extraction
+            if isinstance(extracted_data, list) and extracted_data:
+                extracted_data = extracted_data[0]
+                
+            if not is_relevant_content(extracted_data.get("main_content", ""), topic):
+                return None, []
+                
+            return extracted_data, result.links or []
+        except Exception as e:
+            click.echo(f"⚠️ Error during scraping: {str(e)}")
+            return None, []
     except Exception as e:
-        click.echo(f"❌ Error: {str(e)}", err=True)
+        click.echo(f"⚠️ Error during scraping: {str(e)}")
+        return None, []
+
+async def async_scrape(url, topic):
+    """Scrape structured data from a site based on a topic."""
+    async with AsyncWebCrawler() as crawler:
+        data, links = await scrape_page(crawler, url, url, set(), topic)
+        if data:
+            # Save to JSON file
+            json_filename = topic.replace(' ', '_').lower() + '.json'
+            output_dir = Path(os.path.expanduser("~/.cliche/files/scrape"))
+            output_dir.mkdir(parents=True, exist_ok=True)
+            json_path = output_dir / json_filename
+            
+            # Load existing data if file exists
+            existing_data = []
+            if json_path.exists():
+                try:
+                    with open(json_path, 'r', encoding='utf-8') as f:
+                        existing_data = json.load(f)
+                except json.JSONDecodeError:
+                    pass
+            
+            # Add URL to data
+            data['url'] = url
+            
+            # Check if URL already exists
+            if not any(entry.get('url') == url for entry in existing_data):
+                # Append new data only if URL doesn't exist
+                existing_data.append(data)
+                
+                # Save updated data
+                with open(json_path, 'w', encoding='utf-8') as f:
+                    json.dump(existing_data, f, indent=2, ensure_ascii=False)
+                
+                click.echo(f"✅ Saved scraped data to {json_path}")
+            else:
+                click.echo(f"ℹ️ Content from {url} already exists in {json_path}")
+            return True
+        return False
 
 @click.command()
 @click.argument('url')
-@click.option('--topic', '-t', help='Optional topic to focus on (e.g., "Python Variables")')
-def scrape(url: str, topic: str | None = None):
-    """Scrape content from a URL and all its linked pages (up to 100 pages).
+@click.option('--topic', '-t', required=True, help='Topic to focus on')
+def scrape(url: str, topic: str):
+    """Scrape structured data from a website.
     
-    Optionally provide a --topic to focus on specific content."""
-    asyncio.run(async_scrape(url, topic))
+    Examples:
+        cliche scrape https://example.com --topic "Machine Learning"
+        cliche scrape https://docs.python.org --topic "Python async"
+    """
+    success = asyncio.run(async_scrape(url, topic))
+    if success:
+        click.echo(f"\n💡 Tip: Run 'cliche generate {topic}' to create a document from the scraped data")
