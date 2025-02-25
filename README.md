@@ -288,5 +288,5 @@ If you encounter any issues or have questions, please:
 3. Create a new issue if needed
 
 ---
-Made with ❤️ by Pink Pixel
+Made with ❤️ by Pink Pixel;
 Dream it, Pixel it ✨
