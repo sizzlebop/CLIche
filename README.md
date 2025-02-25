@@ -72,7 +72,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/sizzlebop/cliche.git
+git clone https://github.com/pinkpixel-dev/cliche.git
 cd cliche
 
 # Run the installation script
@@ -284,7 +284,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you encounter any issues or have questions, please:
 1. Check the [FAQ](docs/FAQ.md)
-2. Search existing [Issues](https://github.com/sizzlebop/cliche/issues)
+2. Search existing [Issues](https://github.com/pinkpixel-dev/cliche/issues)
 3. Create a new issue if needed
 
 ---
