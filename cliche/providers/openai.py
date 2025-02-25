@@ -22,7 +22,7 @@ class OpenAIProvider(LLMBase):
                     {"role": "system", "content": self.get_system_context(include_sys_info)},
                     {"role": "user", "content": query}
                 ],
-                max_tokens=self.config.get('max_tokens', 300)
+                max_tokens=self.config.get('max_tokens', 1000)  # Use our new default
             )
             return response.choices[0].message.content
         except Exception as e:

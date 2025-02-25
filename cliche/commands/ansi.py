@@ -1,13 +1,18 @@
 """
-ANSI art commands
+ANSI art command for displaying custom art collection
 """
 import click
-import random
+from random import choice
 from .ansi_art import ANSI_ART
 from ..core import cli
 
 @cli.command()
-def ansi():
-    """Generate a random ANSI art"""
-    art = random.choice(ANSI_ART)
-    click.echo(art)
+@click.option('--index', '-i', type=int, help='Index of art to display')
+def ansi(index: int = None):
+    """Display ANSI art"""
+    if index is not None and 0 <= index < len(ANSI_ART):
+        click.echo(ANSI_ART[index])
+    else:
+        # Show random art if no index specified or index out of range
+        art = choice(ANSI_ART)
+        click.echo(art)

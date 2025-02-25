@@ -1,19 +1,63 @@
 """
-Core functionality for CLIche CLI tool
+Core functionality for CLIche
 """
-import json
 import os
+import json
 import click
 from pathlib import Path
-from typing import Dict, Any
 from enum import Enum
-from dotenv import load_dotenv
+from typing import Optional, Dict, Any
+
 from .providers.openai import OpenAIProvider
 from .providers.anthropic import AnthropicProvider
 from .providers.google import GoogleProvider
 from .providers.ollama import OllamaProvider
 from .providers.deepseek import DeepSeekProvider
 from .providers.openrouter import OpenRouterProvider
+from .utils.generate_from_scrape import generate
+
+class Config:
+    def __init__(self):
+        self.config_dir = Path.home() / ".config" / "cliche"
+        self.config_file = self.config_dir / "config.json"
+        self.config = self._load_config()
+
+    def _load_config(self) -> Dict[str, Any]:
+        """Load configuration from file."""
+        if not self.config_file.exists():
+            # Create default config
+            default_config = {
+                "provider": "openai",
+                "providers": {
+                    "openai": {"api_key": "", "model": "gpt-4"},
+                    "anthropic": {"api_key": "", "model": "claude-3-opus-20240229"},
+                    "google": {"api_key": "", "model": "gemini-pro"},
+                    "ollama": {"model": "phi4"},
+                    "deepseek": {"api_key": "", "model": "deepseek-chat"},
+                    "openrouter": {"api_key": "", "model": "gpt-4-turbo-preview"}
+                }
+            }
+            self.save_config(default_config)
+            return default_config
+
+        try:
+            with open(self.config_file, "r") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            click.echo("Error reading config file. Using defaults.")
+            return {"provider": "openai", "providers": {}}
+
+    def save_config(self, config: Dict[str, Any]) -> None:
+        """Save configuration to file."""
+        self.config_dir.mkdir(parents=True, exist_ok=True)
+        with open(self.config_file, "w") as f:
+            json.dump(config, f, indent=2)
+
+    def get_provider_config(self, provider_name: str) -> Dict[str, Any]:
+        """Get configuration for a specific provider."""
+        if not provider_name:
+            return {}
+        return self.config.get("providers", {}).get(provider_name, {})
 
 class LLMProvider(str, Enum):
     OPENAI = "openai"
@@ -23,82 +67,10 @@ class LLMProvider(str, Enum):
     DEEPSEEK = "deepseek"
     OPENROUTER = "openrouter"
 
-class Config:
-    def __init__(self):
-        # Load environment variables from .env file
-        env_path = Path.home() / ".config" / "cliche" / ".env"
-        load_dotenv(env_path)
-        
-        self.config_dir = Path.home() / ".config" / "cliche"
-        self.config_file = self.config_dir / "config.json"
-        self.config = self._load_config()
-
-    def _load_config(self) -> Dict[str, Any]:
-        """Load configuration from file and environment variables."""
-        default_config = {
-            "active_provider": "openai",
-            "providers": {
-                "openai": {
-                    "api_key": os.getenv("OPENAI_API_KEY", ""),
-                    "model": "gpt-4o",
-                    "max_tokens": 150
-                },
-                "anthropic": {
-                    "api_key": os.getenv("ANTHROPIC_API_KEY", ""),
-                    "model": "claude-3.5-sonnet-20240307",
-                    "max_tokens": 150
-                },
-                "google": {
-                    "api_key": os.getenv("GOOGLE_API_KEY", ""),
-                    "model": "gemini-2.0-flash"
-                },
-                "deepseek": {
-                    "api_key": os.getenv("DEEPSEEK_API_KEY", ""),
-                    "model": "deepseek-chat"
-                },
-                "openrouter": {
-                    "api_key": os.getenv("OPENROUTER_API_KEY", ""),
-                    "model": "openrouter/auto"
-                },
-                "ollama": {
-                    "host": os.getenv("OLLAMA_HOST", "http://localhost:11434"),
-                    "model": "Llama3.2:3b"
-                }
-            },
-            "personality": "snarky, witty, encyclopedic, slightly sarcastic, helpful, knowledgeable"
-        }
-
-        if not self.config_file.exists():
-            self.config_dir.mkdir(parents=True, exist_ok=True)
-            self.save_config(default_config)
-            return default_config
-
-        try:
-            with open(self.config_file) as f:
-                config = json.load(f)
-                # Update API keys from environment if available
-                for provider, settings in config["providers"].items():
-                    env_key = f"{provider.upper()}_API_KEY"
-                    if provider == "ollama":
-                        if os.getenv("OLLAMA_HOST"):
-                            settings["host"] = os.getenv("OLLAMA_HOST")
-                    elif os.getenv(env_key):
-                        settings["api_key"] = os.getenv(env_key)
-                return config
-        except Exception as e:
-            print(f"Error loading config: {e}")
-            return default_config
-
-    def save_config(self, config: Dict[str, Any]) -> None:
-        """Save configuration to file."""
-        try:
-            with open(self.config_file, 'w') as f:
-                json.dump(config, f, indent=2)
-        except Exception as e:
-            print(f"Error saving config: {e}")
-
-    def get_provider_config(self, provider: str) -> Dict:
-        return self.config["providers"].get(provider, {})
+def get_llm():
+    """Get the configured LLM provider."""
+    cliche = CLIche()
+    return cliche.provider
 
 class CLIche:
     def __init__(self):
@@ -106,7 +78,8 @@ class CLIche:
         self.provider = self._get_provider()
 
     def _get_provider(self):
-        provider_name = self.config.config["active_provider"]
+        """Get the configured LLM provider."""
+        provider_name = self.config.config.get("provider", "openai").lower()
         provider_config = self.config.get_provider_config(provider_name)
 
         if provider_name == LLMProvider.OPENAI:
@@ -122,18 +95,34 @@ class CLIche:
         elif provider_name == LLMProvider.OPENROUTER:
             return OpenRouterProvider(provider_config)
         else:
-            raise ValueError(f"Unsupported provider: {provider_name}")
+            raise ValueError(f"Unknown provider: {provider_name}")
 
-    async def ask_llm(self, query: str, include_sys_info: bool = False) -> str:
+    def _should_include_system_info(self, query: str) -> bool:
+        """Determine if system information should be included based on query content."""
+        system_keywords = [
+            "system", "os", "platform", "hardware", "cpu", "memory",
+            "ram", "disk", "storage", "network", "gpu", "processor"
+        ]
+        query_lower = query.lower()
+        return any(keyword in query_lower for keyword in system_keywords)
+
+    def ask_llm(self, query: str):
         """Ask the LLM a question.
         
         Args:
             query: The question to ask
-            include_sys_info: Whether to include system information in the context
         """
-        return await self.provider.generate_response(query, include_sys_info)
+        return self.provider.generate(query)
 
+# Create the main CLI group
 @click.group()
 def cli():
     """CLIche: Your terminal's snarky genius assistant"""
     pass
+
+# Register commands
+def register_all_commands():
+    from .commands.registry import register_commands
+    register_commands(cli)
+
+register_all_commands()

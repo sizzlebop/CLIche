@@ -13,13 +13,16 @@ class AnthropicProvider(LLMBase):
 
     async def generate_response(self, query: str, include_sys_info: bool = False) -> str:
         try:
+            # Get system context
+            system_context = self.get_system_context(include_sys_info)
+            
             response = self.client.messages.create(
                 model=self.config['model'],
+                system=system_context,  # Anthropic uses a separate system parameter
                 messages=[
-                    {"role": "system", "content": self.get_system_context(include_sys_info)},
                     {"role": "user", "content": query}
                 ],
-                max_tokens=self.config.get('max_tokens', 300)
+                max_tokens=self.config.get('max_tokens', 1000)  # Use our new default
             )
             return response.content[0].text
         except Exception as e:
