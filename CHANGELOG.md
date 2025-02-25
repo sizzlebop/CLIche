@@ -94,6 +94,16 @@ All notable changes to the CLIche project will be documented in this file.
 - ⚙️ Configuration management
 - 📁 File organization for generated content
 
+## [1.2.1] - 2025-02-25
+
+### Added
+- 🔍 Re-implemented `search` command for finding files on your computer
+  - Search by file name pattern or file type
+  - Search from home directory, current directory, or root
+  - Support for hidden files and depth control
+  - Uses fast fd-find when available with fallback to find command
+  - Improved cross-platform support
+
 ---
 
 Made with ❤️ by Pink Pixel

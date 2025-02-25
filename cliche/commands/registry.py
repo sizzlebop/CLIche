@@ -8,6 +8,7 @@ from .code import code
 from .process import kill
 from .roast import roastme
 from .scrape import scrape
+from .search import search
 from .server import servers
 from .system import system
 from .view import view
@@ -29,6 +30,7 @@ def register_commands(cli):
     cli.add_command(models)
     cli.add_command(roastme)
     cli.add_command(scrape)
+    cli.add_command(search)
     cli.add_command(servers)
     cli.add_command(system)
     cli.add_command(view)

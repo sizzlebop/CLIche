@@ -16,6 +16,7 @@ Turn your terminal into a wise-cracking genius with a snarky, all-knowing LLM as
 - 🕸️ **Web Scraping**: Extract and save content from websites with `scrape` command
 - 📝 **Document Generation**: Create professional documents from scraped data
 - 🎭 **Personality Switching**: Toggle between snarky and professional tones
+- 🔎 **File Search**: Find files on your computer with the `search` command
 
 ## Core Features
 
@@ -29,11 +30,15 @@ Turn your terminal into a wise-cracking genius with a snarky, all-knowing LLM as
 - 🎯 Easy provider switching
 - 🔐 Secure API key management
 - ✨ **Generation commands**:
-  - `code`: Generate code in any language
+  - `code`: Generate code in any language.
   - `write`: Generate text, markdown, or HTML content
-  - `research`: Search the web and generate responses based on current information
+  - `research`: Search the web and generate responses based on current information. Generate documents from research with --write.
   - `scrape`: Extract and save web content
-  - `generate`: Create documents from scraped content
+  - `generate`: Create documents from scraped content.
+- 🔍 **System commands**:
+  - `search`: Find files on your computer by name or type
+  - `system`: Display system information
+  - `servers`: List and manage running servers
 - 🎨 **Art & ANSI support**:
   - Generate ASCII text art with custom fonts
   - Display random ASCII art patterns
@@ -41,8 +46,6 @@ Turn your terminal into a wise-cracking genius with a snarky, all-knowing LLM as
 - 🛠️ GPU and Docker utilities
 - 📝 Rich configuration options
 - 🔥 Get roasted about your programming habits
-- 💻 View system information
-- 🔌 List and manage running servers
 - 😏 Snarky responses included at no extra charge
 
 ## Installation
@@ -77,13 +80,22 @@ pip install -e .
 1. Set up your API keys:
 ```bash
 # Set up OpenAI
-export OPENAI_API_KEY=your_key_here
+cliche config --provider openai --api-key your_key_here
 
 # Or Anthropic
-export ANTHROPIC_API_KEY=your_key_here
+cliche config --provider anthropic --api-key your_key_here
 
 # Or Google
-export GOOGLE_API_KEY=your_key_here
+cliche config --provider google --api-key your_key_here
+
+# Or DeepSeek
+cliche config --provider deepseek --api-key your_key_here
+
+# Or OpenRouter
+cliche config --provider openrouter --api-key your_key_here
+
+# Or Ollama
+cliche config --provider ollama --model llama3.2:8b
 ```
 
 2. Ask a question:
@@ -98,7 +110,8 @@ cliche code "make me a snake game" --lang python
 
 4. Research a topic online:
 ```bash
-cliche research "Latest developments in AI regulation"
+cliche research "Latest developments in AI regulation" - get a response in your terminal
+cliche research "Latest developments in AI regulation" --write --format markdown - write a markdown document
 ```
 
 5. Scrape a website for information:
@@ -109,6 +122,43 @@ cliche scrape "https://docs.python.org/3/" --topic "Python async" --depth 2
 6. Generate a document from scraped content:
 ```bash
 cliche generate "Python async" --format markdown
+```
+
+7. Get system information:
+```bash
+cliche system
+```
+
+8. List running servers:
+```bash
+cliche servers
+```
+
+9. Get roasted:
+```bash
+cliche roast
+```
+
+10. Get a random ASCII art pattern:
+```bash
+cliche art
+cliche art "hello" - get a specific ASCII art pattern
+```
+
+11. Get a random ANSi art pattern:
+```bash
+cliche ansi
+
+12. View a generated file:cliche view tutorial.md --type write
+```bash
+cliche view my_file.md --type write
+cliche view game.py --type code
+```
+
+13. Search for files:
+```bash
+cliche search -t py    # Find all Python files in your home directory
+cliche search -n "*.md" -l  # Find markdown files in current directory
 ```
 
 ## Web Research
@@ -162,10 +212,10 @@ Configure your preferred providers and settings with the `config` command:
 
 ```bash
 # Configure OpenAI provider
-cliche config --provider openai --api-key your_api_key
+cliche config --provider openai --api-key your_api_key --model gpt-4o
 
 # Configure Ollama provider
-cliche config --provider ollama --model llama3
+cliche config --provider ollama --model llama3.2:8b
 ```
 
 Your configuration is stored in `~/.config/cliche/config.json`.
@@ -195,7 +245,14 @@ Your configuration is stored in `~/.config/cliche/config.json`.
 ### Ollama (Local Models)
 1. Install Ollama from [ollama.ai](https://ollama.ai)
 2. Start the Ollama service: `ollama serve`
-3. Set it up with: `cliche config --provider ollama --model llama3`
+3. Set it up with: `cliche config --provider ollama --model llama3.2:8b`
+
+## Model configuration
+
+You can easily switch out the model you want to use with the `config` command after your API keys are set up in the config file.
+```bash
+cliche config --provider openai --model gpt-4o
+```
 
 ## Contributing
 
