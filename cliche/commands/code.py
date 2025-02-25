@@ -85,7 +85,7 @@ async def async_code(prompt: tuple[str, ...], lang: str, path: Optional[str]):
     # Generate code with specific language context
     response = await llm.generate_response(
         f"Generate {lang} code for: {full_prompt}\n"
-        f"Only output the code, no explanations. "
+        f"Provide the code within proper markdown code blocks using triple backticks. "
         f"Include all necessary imports, dependencies, and a complete working implementation.",
         include_sys_info=False
     )

@@ -51,8 +51,8 @@ async def async_write(prompt: tuple[str, ...], format: str, path: Optional[str])
     
     # Add format-specific instructions
     format_instructions = {
-        'text': 'Write this as a plain text document.',
-        'markdown': 'Write this as a markdown document with proper formatting.',
+        'text': 'Write this as a plain text document without any special formatting.',
+        'markdown': 'Write this as a markdown document with proper formatting. Use markdown features like headings, lists, code blocks, bold, italic, and links as appropriate. Format your response using rich markdown syntax.',
         'html': 'Write this as an HTML document with proper tags and structure.'
     }[format]
     

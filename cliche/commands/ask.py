@@ -17,5 +17,5 @@ def ask(query):
     click.echo("🤔 CLIche is pondering (and judging)...")
     
     assistant = CLIche()
-    response = asyncio.run(assistant.ask_llm(query_str))
+    response = asyncio.run(assistant.ask_llm(f"Respond to this query in plain text format without markdown formatting: {query_str}"))
     click.echo(f"\n💡 {response}")
