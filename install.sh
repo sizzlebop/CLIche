@@ -56,6 +56,9 @@ source ~/.bashrc
 
 # Test the installation
 if command -v cliche >/dev/null 2>&1; then
+    echo -e "                 ░█▀▀░█░░░▀█▀░█▀▀░█░█░█▀▀
+                 ░█░░░█░░░░█░░█░░░█▀█░█▀▀
+                 ░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀░▀░▀▀▀"
     echo -e "${GREEN}🎉 CLIche installed successfully!${WHITE}"
     echo -e "${CYAN}✨ You can now use 'cliche' from anywhere.${WHITE}"
     echo -e "${PURPLE}🔑 To get started, configure your API settings${WHITE}"
