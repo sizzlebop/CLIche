@@ -1,52 +1,70 @@
 # CLIche
 
-🤖 A command-line interface for interacting with various LLM providers with a snarky personality.
+<div align="center">
+  <img src="https://res.cloudinary.com/di7ctlowx/image/upload/v1740506249/Untitled_design_5_nielz6.png" alt="CLIche Logo" width="300"/>
+  
+  🤖 CLIche is a command-line interface for interacting with various LLM providers. It provides powerful web research capabilities, targeted scraping, and professional document generation. Snarky responses included at no extra charge.
+</div>
 
-### A snarky, all-knowing LLM terminal assistant
+### Turn your terminal into a wise-cracking genius with a snarky, all-knowing LLM assistant. Plus, gain the power to research topics, scrape websites, and generate professional documents.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-Turn your terminal into a wise-cracking genius with a snarky, all-knowing LLM assistant. Plus, gain the power to research topics, scrape websites, and generate professional documents.
-
 ## Latest Features
 
 - 🔍 **Web Research**: Get up-to-date information from the web with `research` command
 - 🕸️ **Web Scraping**: Extract and save content from websites with `scrape` command
-- 📝 **Document Generation**: Create professional documents from scraped data
-- 🎭 **Personality Switching**: Toggle between snarky and professional tones
+- 📝 **Document Generation**: Create professional documents from scraped or researched data
+- 🎭 **Personality Switching**: Snarky at it's core but professional when you need it
 - 🔎 **File Search**: Find files on your computer with the `search` command
 
 ## Core Features
 
 - 🔄 **Multi-provider support**:
-  - OpenAI (GPT-4, GPT-3.5, O-series)
-  - Anthropic (Claude 3.5)
-  - Google (Gemini 2.0)
-  - DeepSeek (Chat, Coder)
-  - OpenRouter (Free models)
-  - Ollama (Local models)
-- 🎯 Easy provider switching
-- 🔐 Secure API key management
-- ✨ **Generation commands**:
+  - OpenAI
+  - Anthropic
+  - Google
+  - DeepSeek
+  - OpenRouter - has many free models
+  - Ollama - for using local models
+
+- 🎯 **Easy provider switching**
+- 🔐 **Secure API key management**
+- 📝 **Rich configuration options**
+- 🔥 **Get roasted by the AI**
+- 😏 **Snarky responses included at no extra charge**
+- 🔍 **File Search**: Find files on your computer with the `search` command
+- 🔍 **Web Research**: Get up-to-date information from the web with `research` command
+- 🕸️ **Web Scraping**: Extract and save content from websites with `scrape` command
+- 📝 **Document Generation**: Create professional documents from scraped data
+- 🎨 **Art & ANSI support**:
+  - Generate ASCII text art with custom fonts
+  - Display random ASCII art patterns
+  - Display random ANSI art patterns
+
+
+- ✨ **Base commands**:
+  - `ask`: Ask the AI a question
+  - `roastme`: Get roasted by the AI
+  - `art`: Display random ASCII art patterns
+  - `ansi`: Display random ANSI art patterns
+  - `view`: View a generated file
+  - `config`: Configure your API keys and model settings
+  - `config-manager`: Manage CLIche configuration files
+- 📝 **Generation commands**:
   - `code`: Generate code in any language.
   - `write`: Generate text, markdown, or HTML content
   - `research`: Search the web and generate responses based on current information. Generate documents from research with --write.
   - `scrape`: Extract and save web content
   - `generate`: Create documents from scraped content.
+  - `view`: View a generated file
 - 🔍 **System commands**:
   - `search`: Find files on your computer by name or type
   - `system`: Display system information
   - `servers`: List and manage running servers
-- 🎨 **Art & ANSI support**:
-  - Generate ASCII text art with custom fonts
-  - Display random ASCII art patterns
-  - Show custom ANSI art collection
-- 🛠️ GPU and Docker utilities
-- 📝 Rich configuration options
-- 🔥 Get roasted about your programming habits
-- 😏 Snarky responses included at no extra charge
+  - `kill`: Kill a running server or process by PID
 
 ## Installation
 
@@ -136,7 +154,7 @@ cliche servers
 
 9. Get roasted:
 ```bash
-cliche roast
+cliche roastme
 ```
 
 10. Get a random ASCII art pattern:
