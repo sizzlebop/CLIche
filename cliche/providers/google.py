@@ -11,11 +11,11 @@ class GoogleProvider(LLMBase):
         super().__init__(config)
         genai.configure(api_key=config.get('api_key') or os.getenv('GOOGLE_API_KEY'))
 
-    async def generate_response(self, query: str, include_sys_info: bool = False) -> str:
+    async def generate_response(self, query: str, include_sys_info: bool = False, professional_mode: bool = False) -> str:
         try:
             model = genai.GenerativeModel(self.config['model'])
             response = model.generate_content([
-                {"role": "system", "content": self.get_system_context(include_sys_info)},
+                {"role": "system", "content": self.get_system_context(include_sys_info, professional_mode)},
                 {"role": "user", "content": query}
             ])
             return response.text

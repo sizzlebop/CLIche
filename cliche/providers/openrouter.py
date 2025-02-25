@@ -12,7 +12,7 @@ class OpenRouterProvider(LLMBase):
         self.api_key = config.get('api_key') or os.getenv('OPENROUTER_API_KEY')
         self.api_base = "https://openrouter.ai/api/v1"
 
-    async def generate_response(self, query: str, include_sys_info: bool = False) -> str:
+    async def generate_response(self, query: str, include_sys_info: bool = False, professional_mode: bool = False) -> str:
         try:
             response = requests.post(
                 f"{self.api_base}/chat/completions",
@@ -24,7 +24,7 @@ class OpenRouterProvider(LLMBase):
                 json={
                     "model": self.config['model'],
                     "messages": [
-                        {"role": "system", "content": self.get_system_context(include_sys_info)},
+                        {"role": "system", "content": self.get_system_context(include_sys_info, professional_mode)},
                         {"role": "user", "content": query}
                     ]
                 }

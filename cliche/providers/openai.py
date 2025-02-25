@@ -11,7 +11,7 @@ class OpenAIProvider(LLMBase):
         super().__init__(config)
         self.client = OpenAI(api_key=config.get('api_key') or os.getenv('OPENAI_API_KEY'))
 
-    async def generate_response(self, query: str, include_sys_info: bool = False) -> str:
+    async def generate_response(self, query: str, include_sys_info: bool = False, professional_mode: bool = False) -> str:
         try:                 
             # Get the configured model or use gpt-4o as default
             model = self.config.get('model', 'gpt-4o')
@@ -19,7 +19,7 @@ class OpenAIProvider(LLMBase):
             response = self.client.chat.completions.create(
                 model=model,  # Use the configured model
                 messages=[
-                    {"role": "system", "content": self.get_system_context(include_sys_info)},
+                    {"role": "system", "content": self.get_system_context(include_sys_info, professional_mode)},
                     {"role": "user", "content": query}
                 ],
                 max_tokens=self.config.get('max_tokens', 1000)  # Use our new default

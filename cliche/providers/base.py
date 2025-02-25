@@ -6,7 +6,7 @@ import psutil
 from datetime import datetime
 from typing import Dict, Optional, List, Tuple
 from ..utils.gpu import get_gpu_info
-from ..prompts import MAIN_SYSTEM_PROMPT
+from ..prompts import MAIN_SYSTEM_PROMPT, PROFESSIONAL_SYSTEM_PROMPT
 
 class LLMBase:
     def __init__(self, config: Dict):
@@ -15,14 +15,15 @@ class LLMBase:
         if 'max_tokens' not in self.config:
             self.config['max_tokens'] = 1000  # Increased to allow for longer, more detailed responses
 
-    def get_system_context(self, include_sys_info: bool = False) -> str:
+    def get_system_context(self, include_sys_info: bool = False, professional_mode: bool = False) -> str:
         """Get current system context.
         
         Args:
             include_sys_info: Whether to include system information in the context.
+            professional_mode: If True, use professional tone without personality traits.
         """
-        # Start with the main personality and behavior prompt
-        context = MAIN_SYSTEM_PROMPT
+        # Use professional prompt or personality prompt based on mode
+        context = PROFESSIONAL_SYSTEM_PROMPT if professional_mode else MAIN_SYSTEM_PROMPT
 
         # Add current time and system info if requested
         current_time = datetime.now().strftime("%I:%M %p")
@@ -49,7 +50,7 @@ class LLMBase:
 
         return context
 
-    async def generate_response(self, query: str, include_sys_info: bool = False) -> str:
+    async def generate_response(self, query: str, include_sys_info: bool = False, professional_mode: bool = False) -> str:
         raise NotImplementedError
 
     async def list_models(self) -> List[Tuple[str, str]]:

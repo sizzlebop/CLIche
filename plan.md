@@ -148,5 +148,27 @@
 4. [ ] Create developer documentation
 5. [ ] Implement tab completion
 
+## Improvement Ideas
+
+For scrape.py:
+1. Implement recursive crawling with depth control to gather more related content
+2. Add pagination detection and handling
+3. Improve content relevance checking with more sophisticated algorithms
+4. Use a sliding window approach for large content extraction
+5. Add multiple retry strategies for different page types
+6. Enhance the LLM prompt to extract more detailed content
+7. Add rate limiting and proper user agent rotation
+8. Store more metadata with scraped content (e.g., date scraped, HTML version, etc.)
+9. Add support for handling JavaScript-rendered content
+
+For generate_from_scrape.py:
+1. Implement intelligent content organization by topic similarity
+2. Add content deduplication and redundancy removal
+3. Improve the LLM prompt to generate more comprehensive documents
+4. Add metadata about sources in the generated document
+5. Implement a hierarchical document structure based on content relationships
+6. Add options for different document styles (technical, educational, summary, etc.)
+7. Implement content priority based on relevance scores
+
 ---
 Made with ❤️ by Pink Pixel

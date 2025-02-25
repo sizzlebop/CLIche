@@ -19,24 +19,33 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.pytest_cache/
+tests/
 
 # Virtual Environment
 venv/
-ENV/
-env/
+bypass_env/
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+cliche.code-workspace
 
 # Environment
-.env
-.env.*
-!.env.template
+cliche-bypass
+setup_env.sh
+run.sh
+run_cliche.sh
+run_python.sh
 
 # Misc
 .DS_Store
 .windsurfrules
-make_me_an_arkanoid_game.python
+.cursorrules
+.cursorignore
+.cursor/rules/
+MEMORIES.md
+plan.md
+BYPASS_README.md

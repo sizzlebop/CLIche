@@ -64,8 +64,8 @@ async def async_write(prompt: tuple[str, ...], format: str, path: Optional[str])
     click.echo("🔄 Generating content...")
     
     try:
-        # Generate content
-        content = await llm.generate_response(full_prompt)
+        # Generate content - use professional mode for document generation
+        content = await llm.generate_response(full_prompt, professional_mode=True)
         
         if format == 'html' and not content.strip().startswith('<!DOCTYPE html>'):
             content = f"""<!DOCTYPE html>

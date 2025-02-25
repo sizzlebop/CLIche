@@ -112,7 +112,7 @@ class CLIche:
         Args:
             query: The question to ask
         """
-        return self.provider.generate(query)
+        return self.provider.generate_response(query)
 
 # Create the main CLI group
 @click.group()

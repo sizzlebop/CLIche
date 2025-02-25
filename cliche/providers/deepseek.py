@@ -14,7 +14,7 @@ class DeepSeekProvider(LLMBase):
         self.api_key = config['api_key']
         self.api_base = "https://api.deepseek.com/v1"
 
-    async def generate_response(self, query: str, include_sys_info: bool = False) -> str:
+    async def generate_response(self, query: str, include_sys_info: bool = False, professional_mode: bool = False) -> str:
         try:
             api_url = f"{self.api_base}/chat/completions"
             headers = {
@@ -24,7 +24,7 @@ class DeepSeekProvider(LLMBase):
             payload = {
                 "model": self.config['model'],
                 "messages": [
-                    {"role": "system", "content": self.get_system_context(include_sys_info)},
+                    {"role": "system", "content": self.get_system_context(include_sys_info, professional_mode)},
                     {"role": "user", "content": query}
                 ],
                 "max_tokens": self.config.get('max_tokens', 50000),

@@ -87,7 +87,8 @@ async def async_code(prompt: tuple[str, ...], lang: str, path: Optional[str]):
         f"Generate {lang} code for: {full_prompt}\n"
         f"Provide the code within proper markdown code blocks using triple backticks. "
         f"Include all necessary imports, dependencies, and a complete working implementation.",
-        include_sys_info=False
+        include_sys_info=False,
+        professional_mode=True
     )
     
     # Extract code blocks

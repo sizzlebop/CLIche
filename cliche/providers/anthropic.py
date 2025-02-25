@@ -11,10 +11,10 @@ class AnthropicProvider(LLMBase):
         super().__init__(config)
         self.client = anthropic.Anthropic(api_key=config.get('api_key') or os.getenv('ANTHROPIC_API_KEY'))
 
-    async def generate_response(self, query: str, include_sys_info: bool = False) -> str:
+    async def generate_response(self, query: str, include_sys_info: bool = False, professional_mode: bool = False) -> str:
         try:
             # Get system context
-            system_context = self.get_system_context(include_sys_info)
+            system_context = self.get_system_context(include_sys_info, professional_mode)
             
             response = self.client.messages.create(
                 model=self.config['model'],

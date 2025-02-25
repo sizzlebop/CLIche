@@ -439,8 +439,9 @@ Do not include markdown formatting in your response, just use plain text.
     llm = get_llm()
     
     try:
-        # Generate content
-        response = asyncio.run(llm.generate_response(prompt))
+        # Generate content - use professional mode for document generation
+        professional_mode = write  # Use professional mode when generating a document
+        response = asyncio.run(llm.generate_response(prompt, professional_mode=professional_mode))
         
         # Determine what to do with the response based on write flag
         if write:

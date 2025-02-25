@@ -13,6 +13,7 @@ from .commands.server import servers
 from .commands.code import code
 from .commands.write import write
 from .commands.config_manager_cmd import config_manager_cmd
+from .commands.research import research
 
 # Initialize config management on import
 from .utils import config_manager
@@ -29,6 +30,7 @@ cli.add_command(system)
 cli.add_command(code)
 cli.add_command(write)
 cli.add_command(config_manager_cmd)
+cli.add_command(research)
 
 __version__ = "0.1.0"
 __all__ = ['cli']

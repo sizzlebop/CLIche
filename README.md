@@ -1,32 +1,40 @@
 # CLIche
 
-🤖 A command-line interface for interacting with various LLM providers.
+🤖 A command-line interface for interacting with various LLM providers with a snarky personality.
 
 ### A snarky, all-knowing LLM terminal assistant
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-Turn your terminal into a wise-cracking genius with a snarky, all-knowing LLM assistant.
+Turn your terminal into a wise-cracking genius with a snarky, all-knowing LLM assistant. Plus, gain the power to research topics, scrape websites, and generate professional documents.
 
-## Features
+## Latest Features
 
-- 🔄 Multi-provider support:
+- 🔍 **Web Research**: Get up-to-date information from the web with `research` command
+- 🕸️ **Web Scraping**: Extract and save content from websites with `scrape` command
+- 📝 **Document Generation**: Create professional documents from scraped data
+- 🎭 **Personality Switching**: Toggle between snarky and professional tones
+
+## Core Features
+
+- 🔄 **Multi-provider support**:
   - OpenAI (GPT-4, GPT-3.5, O-series)
   - Anthropic (Claude 3.5)
-  - Google (Gemini 1.5)
-  - DeepSeek (Chat, Coder, Math)
+  - Google (Gemini 2.0)
+  - DeepSeek (Chat, Coder)
   - OpenRouter (Free models)
   - Ollama (Local models)
 - 🎯 Easy provider switching
 - 🔐 Secure API key management
-- ✨ Generation commands:
+- ✨ **Generation commands**:
   - `code`: Generate code in any language
   - `write`: Generate text, markdown, or HTML content
-  - `view`: View generated files with proper formatting
-  - `scrape`: Extract and save web content ([docs/web_scraping.md](docs/web_scraping.md))
-- 🎨 Art & ANSI support:
+  - `research`: Search the web and generate responses based on current information
+  - `scrape`: Extract and save web content
+  - `generate`: Create documents from scraped content
+- 🎨 **Art & ANSI support**:
   - Generate ASCII text art with custom fonts
   - Display random ASCII art patterns
   - Show custom ANSI art collection
@@ -35,22 +43,32 @@ Turn your terminal into a wise-cracking genius with a snarky, all-knowing LLM as
 - 🔥 Get roasted about your programming habits
 - 💻 View system information
 - 🔌 List and manage running servers
-- ⚙️ Easy configuration for API keys and model settings
 - 😏 Snarky responses included at no extra charge
 
 ## Installation
+
+### Quick Install
+
+```bash
+# Clone the repository
+git clone https://github.com/sizzlebop/cliche.git
+cd cliche
+
+# Run the installation script
+./install.sh
+```
+
+### Manual Installation
 
 ```bash
 # Create a virtual environment (recommended)
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install from PyPI
-pip install cliche-cli
+# Install dependencies
+pip install -r requirements.txt
 
-# Or install from source
-git clone https://github.com/sizzlebop/cliche.git
-cd cliche
+# Install the package in development mode
 pip install -e .
 ```
 
@@ -68,110 +86,116 @@ export ANTHROPIC_API_KEY=your_key_here
 export GOOGLE_API_KEY=your_key_here
 ```
 
-2. Generate some code:
+2. Ask a question:
 ```bash
-# Generate a Python game
-cliche code make me a snake game --lang python
-
-# Generate a React component
-cliche code create a login form --lang javascript
+cliche ask "What is the meaning of life?"
 ```
 
-3. Write some content:
+3. Generate some code:
 ```bash
-# Generate a markdown tutorial
-cliche write a tutorial on docker --type markdown
-
-# Generate an HTML blog post
-cliche write a blog post about AI --type html
+cliche code "make me a snake game" --lang python
 ```
 
-4. View generated files:
+4. Research a topic online:
 ```bash
-# View a markdown file
-cliche view tutorial.md
-
-# View generated code
-cliche view game.py --type code
+cliche research "Latest developments in AI regulation"
 ```
 
-## File Organization
+5. Scrape a website for information:
+```bash
+cliche scrape "https://docs.python.org/3/" --topic "Python async" --depth 2
+```
 
-Generated files are stored in:
-- Code: `~/.cliche/files/code/`
-- Text: `~/.cliche/files/write/`
+6. Generate a document from scraped content:
+```bash
+cliche generate "Python async" --format markdown
+```
+
+## Web Research
+
+The `research` command allows you to get up-to-date information from the web:
+
+```bash
+# Basic research
+cliche research "Current state of quantum computing"
+
+# Research with more sources
+cliche research "History of artificial intelligence" --depth 5
+
+# Generate a markdown document
+cliche research "Space exploration milestones" --write --format markdown
+```
+
+See [RESEARCH_COMMAND_README.md](RESEARCH_COMMAND_README.md) for more details.
+
+## Web Scraping & Document Generation
+
+The `scrape` and `generate` commands work together to extract and process web content:
+
+```bash
+# Scrape a specific URL with topic focus
+cliche scrape "https://docs.python.org/3/library/asyncio.html" --topic "Python async"
+
+# Generate a document from previously scraped content
+cliche generate "Python async" --format markdown
+```
+
+See [SCRAPE_COMMAND_README.md](SCRAPE_COMMAND_README.md) for more details.
+
+## Helper Scripts
+
+CLIche includes several helper scripts for common operations:
+
+- `scrape.sh`: Helper for topic-based scraping
+- `generate.sh`: Helper for document generation
+- `cliche-bypass`: Run CLIche in an isolated environment
+
+Example usage:
+```bash
+./scrape.sh "https://docs.github.com" "GitHub Copilot" 2 5
+./generate.sh "GitHub Copilot" markdown
+```
 
 ## Configuration
 
-Configure your preferred providers and settings in `~/.cliche/config.yaml`:
+Configure your preferred providers and settings with the `config` command:
 
-```yaml
-default_provider: openai
-default_model: gpt-4
-include_sys_info: true
+```bash
+# Configure OpenAI provider
+cliche config --provider openai --api-key your_api_key
+
+# Configure Ollama provider
+cliche config --provider ollama --model llama3
 ```
 
-## Providers
+Your configuration is stored in `~/.config/cliche/config.json`.
+
+## Provider Setup
 
 ### OpenAI
 1. Get your API key from [OpenAI](https://platform.openai.com)
-2. Set the environment variable:
-```bash
-export OPENAI_API_KEY=your_key_here
-```
+2. Set it up with: `cliche config --provider openai --api-key your_key`
 
 ### Anthropic
 1. Get your API key from [Anthropic](https://console.anthropic.com)
-2. Set the environment variable:
-```bash
-export ANTHROPIC_API_KEY=your_key_here
-```
+2. Set it up with: `cliche config --provider anthropic --api-key your_key`
 
 ### Google
 1. Get your API key from [Google AI Studio](https://makersuite.google.com)
-2. Set the environment variable:
-```bash
-export GOOGLE_API_KEY=your_key_here
-```
+2. Set it up with: `cliche config --provider google --api-key your_key`
 
 ### DeepSeek
 1. Get your API key from [DeepSeek](https://platform.deepseek.ai)
-2. Set the environment variable:
-```bash
-export DEEPSEEK_API_KEY=your_key_here
-```
+2. Set it up with: `cliche config --provider deepseek --api-key your_key`
 
 ### OpenRouter
 1. Get your API key from [OpenRouter](https://openrouter.ai)
-2. Set the environment variable:
-```bash
-export OPENROUTER_API_KEY=your_key_here
-```
+2. Set it up with: `cliche config --provider openrouter --api-key your_key`
 
 ### Ollama (Local Models)
 1. Install Ollama from [ollama.ai](https://ollama.ai)
-2. Start the Ollama service:
-```bash
-ollama serve
-```
-
-## Web Scraping
-
-The `scrape` command allows you to extract content from websites and save it as markdown:
-
-```bash
-# Basic scraping
-cliche scrape "https://example.com"
-
-# Focused scraping on a specific topic
-cliche scrape "https://example.com" --topic "Python Variables"
-```
-
-Features:
-- Follows links within the same domain (up to 100 pages)
-- Filters out navigation and tool links
-- Optional topic filtering to focus on relevant content
-- Saves output as clean markdown files
+2. Start the Ollama service: `ollama serve`
+3. Set it up with: `cliche config --provider ollama --model llama3`
 
 ## Contributing
 
@@ -180,11 +204,6 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Thanks to all the LLM providers for their amazing models
-- Special thanks to our contributors and users
 
 ## Support
 
@@ -195,3 +214,4 @@ If you encounter any issues or have questions, please:
 
 ---
 Made with ❤️ by Pink Pixel
+Dream it, Pixel it ✨

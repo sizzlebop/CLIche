@@ -11,13 +11,13 @@ class OllamaProvider(LLMBase):
         super().__init__(config)
         self.host = config.get('host', 'http://localhost:11434')
 
-    async def generate_response(self, query: str, include_sys_info: bool = False) -> str:
+    async def generate_response(self, query: str, include_sys_info: bool = False, professional_mode: bool = False) -> str:
         try:
             response = requests.post(
                 f"{self.host}/api/generate",
                 json={
                     "model": self.config['model'],
-                    "system": self.get_system_context(include_sys_info),
+                    "system": self.get_system_context(include_sys_info, professional_mode),
                     "prompt": query,
                     "stream": False,
                     "options": {

@@ -23,7 +23,10 @@ setup(
         'black>=23.0.0',
         'pytest>=7.0.0',
         'pytest-asyncio>=0.21.0',
-        'duckduckgo-search>=2.8.6'
+        'duckduckgo-search>=2.8.6',
+        'rich>=13.0.0',
+        'art>=6.0',
+        'pydantic>=2.0.0'
     ],
     entry_points={
         'console_scripts': [
