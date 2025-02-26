@@ -74,7 +74,7 @@ cliche scrape "https://react.dev/learn" --topic "React hooks" --format markdown
 
 ## Generate Command
 
-The `generate` command creates structured documents from previously scraped content, organizing information into a cohesive document with proper sections and formatting.
+The `generate` command creates well-structured documents from previously scraped content. It uses an LLM to organize and format the data into a coherent document, optionally enhancing it with images.
 
 ### Usage
 
@@ -86,10 +86,14 @@ cliche generate TOPIC [OPTIONS]
 
 | Option | Description |
 |--------|-------------|
-| `--format [markdown\|html\|pdf\|text]` | Output format (default: markdown) |
-| `--output TEXT` | Output file name (default: auto-generated) |
-| `--professional` | Use professional tone (default: use CLIche's snarky tone) |
-| `--toc` | Include table of contents (default: true for markdown and HTML) |
+| `--format [text\|markdown\|html]` | Output format (default: markdown) |
+| `--path TEXT` | Optional path to save the file |
+| `--raw` | Generate raw merged content without LLM processing |
+| `--professional` | Use professional tone (default: snarky) |
+| `--summarize` | Generate a concise summary instead of comprehensive content |
+| `--image TEXT` | Add images related to the topic by search term |
+| `--image-count INTEGER` | Number of images to add (default: 3) |
+| `--image-width INTEGER` | Width of images in pixels (default: 800) |
 | `--debug` | Enable debug mode for verbose output |
 | `--help` | Show help message |
 
@@ -108,6 +112,16 @@ cliche generate "Flask routing" --format html --professional
 **Generate a PDF document with custom filename:**
 ```bash
 cliche generate "React hooks" --format pdf --output react_hooks_guide
+```
+
+**Generate a document with images using direct URLs:**
+```bash
+cliche generate "React hooks" --format markdown --image "react programming" --image-count 2
+```
+
+**Generate an HTML document with professional tone and images:**
+```bash
+cliche generate "Flask routing" --format html --professional --image "flask framework" --image-width 1024
 ```
 
 ## Helper Scripts
@@ -162,9 +176,25 @@ cliche research "Python async programming" --depth 3
 # Step 2: Scrape the most relevant source
 cliche scrape "https://realpython.com/async-io-python/" --topic "Python async" --depth 2
 
-# Step 3: Generate a document
-cliche generate "Python async" --format markdown
+# Step 3: Generate a document with images
+cliche generate "Python async" --format markdown --image "python coding" --image-count 2
 ```
+
+### Image Integration with Direct URLs
+
+When using the `--image` option with the `generate` command, CLIche now embeds images with direct URLs from Unsplash instead of downloading them locally. This offers several advantages:
+
+1. **Better compatibility** - Works with all markdown viewers and platforms
+2. **Improved sharing** - Documents can be shared without needing to include image files
+3. **Standard compliance** - Uses standard markdown image syntax
+
+Example of using images with direct URLs:
+
+```bash
+cliche generate "Machine Learning" --image "neural networks" --image-count 4
+```
+
+This will create a document with four images about neural networks embedded with direct Unsplash URLs, properly attributed in the document.
 
 ## Troubleshooting
 

@@ -39,6 +39,9 @@ cliche research "Your query here" [OPTIONS]
 | `--format [markdown\|html\|text]` | Output format when using --write (default: markdown) |
 | `--output TEXT` | Custom output file name when using --write |
 | `--professional` | Use professional tone (default: CLIche's snarky tone) |
+| `--image TEXT` | Add images related to the topic by search term |
+| `--image-count INTEGER` | Number of images to add (default: 3) |
+| `--image-width INTEGER` | Width of images in pixels (default: 800) |
 | `--debug` | Enable debug mode for verbose output |
 | `--help` | Show help message |
 
@@ -46,7 +49,7 @@ cliche research "Your query here" [OPTIONS]
 
 **Basic research query:**
 ```bash
-cliche research "Current trends in quantum computing"
+cliche research "Latest developments in quantum computing"
 ```
 
 **Research with increased depth (more sources):**
@@ -67,6 +70,41 @@ cliche research "Best practices for Docker containers" --write --output docker_g
 **Debug mode for troubleshooting:**
 ```bash
 cliche research "Tell me a joke" --debug
+```
+
+**Generate a research document with images:**
+```bash
+cliche research "National parks in the USA" --write --image "national parks" --image-count 4
+```
+
+**Professional research document with custom formatting and images:**
+```bash
+cliche research "Renewable energy technologies" --write --format html --professional --image "solar panels" --image-count 2
+```
+
+**Save research results to a markdown file:**
+```bash
+cliche research "Python best practices 2024" --write
+```
+
+**Use professional tone and save as HTML:**
+```bash
+cliche research "Business impact of AI" --professional --write --format html
+```
+
+**Add relevant images to your research document:**
+```bash
+cliche research "Climate change effects" --write --image "climate change" --image-count 3
+```
+
+**Customize output file name:**
+```bash
+cliche research "JavaScript frameworks comparison" --write --output js_frameworks_guide
+```
+
+**Combine multiple options:**
+```bash
+cliche research "Remote work productivity" --professional --write --format markdown --image "remote work" --image-count 2 --output remote_work_guide
 ```
 
 ## How It Works
@@ -91,6 +129,24 @@ The research command follows these steps:
    - Processes aggregated content using the configured LLM
    - Applies selected tone (snarky or professional)
    - Formats output for terminal display or document generation
+
+## Image Integration with Direct URLs
+
+When using the `--image` option with the `research` command, CLIche now embeds images with direct URLs from Unsplash instead of downloading them locally. This offers several advantages:
+
+1. **Better compatibility** - Works with all markdown viewers and platforms
+2. **Improved sharing** - Research documents can be shared without needing to include image files
+3. **Standard compliance** - Uses standard markdown image syntax
+
+The images are automatically placed at strategic locations within your research document (after introduction and major sections) to enhance the visual appeal and information value.
+
+Example of using images with direct URLs in research:
+
+```bash
+cliche research "Renewable energy trends" --write --image "solar energy" --image-count 3
+```
+
+This will create a research document about renewable energy trends with three solar energy images embedded with direct Unsplash URLs, properly attributed in the document.
 
 ## Professional Mode
 
@@ -141,6 +197,15 @@ This will show:
 ### Combining with Other Commands
 
 Research results can be used with other CLIche commands for more comprehensive workflows:
+
+**Research with Images Pipeline:**
+```bash
+# Research a topic with images and save as a document
+cliche research "Deep sea creatures" --write --format markdown --image "deep sea animals" --image-count 3
+
+# View the generated document
+cliche view ~/.cliche/files/research/deep_sea_creatures.md
+```
 
 **Research to Scrape Pipeline:**
 ```bash

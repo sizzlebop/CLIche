@@ -14,7 +14,7 @@
 
 ## Latest Features
 
-- 🖼️ **Unsplash Image Integration**: Search, download and integrate beautiful, free images in your documents with direct URLs
+- 🖼️ **Direct Image URLs**: Unsplash images are now embedded with direct URLs for better sharing and compatibility
 - 🔍 **Web Research**: Get up-to-date information from the web with `research` command
 - 🕸️ **Web Scraping**: Extract and save content from websites with `scrape` command
 - 📝 **Document Generation**: Create professional documents from scraped or researched data
@@ -40,7 +40,7 @@
 - 🔍 **Web Research**: Get up-to-date information from the web with `research` command
 - 🕸️ **Web Scraping**: Extract and save content from websites with `scrape` command
 - 📝 **Document Generation**: Create professional documents from scraped data
-- 🖼️ **Image Integration**: Beautiful images from Unsplash with direct URLs in your documents
+- 🖼️ **Image Integration**: Beautiful images from Unsplash with direct URLs for better sharing and compatibility
 - 🎨 **Art & ANSI support**:
   - Generate ASCII text art with custom fonts
   - Display random ASCII art patterns
