@@ -2,6 +2,46 @@
 
 All notable changes to the CLIche project will be documented in this file.
 
+## [1.3.1] - 2024-07-20
+
+### Enhanced
+- 🖼️ Improved image handling in documents with direct Unsplash URLs
+  - Better compatibility with all markdown viewers
+  - Improved document sharing without local file dependencies
+  - Standard markdown syntax for images
+- 🔧 Fixed image formatting issues in HTML documents
+- 📝 Updated documentation to reflect new image handling approach
+
+### Changed
+- 🔄 Modified image processing to use direct Unsplash URLs in documents instead of downloading
+- 🧩 Removed non-standard markdown syntax for better compatibility
+
+## [1.3.0] - 2024-07-15
+
+### Added
+- 🖼️ New `image` command for Unsplash integration
+  - Search for high-quality, free images with various filters
+  - Download images with custom dimensions
+  - Proper attribution in compliance with Unsplash requirements
+- 📸 Image integration for document generation commands
+  - Add images to research results with `--image` option
+  - Include images in generated documents from scraped content
+  - Add images to content created with the `write` command
+- 🔑 Unsplash API key configuration via `config --unsplash-key`
+- 🗂️ Automatic local image storage in `~/.cliche/files/images/`
+
+### Enhanced
+- 📝 `write` command now supports image integration
+- 🔍 `research` command with image support for better documentation
+- 📄 `generate` command with image capabilities for richer documents
+- 📚 Documentation updated with image command usage examples
+- ⚙️ Configuration system extended to support service-specific APIs
+
+### Changed
+- 🔄 Updated dependency requirements to include Unsplash API client
+- 🧩 Modified document generation to support image placeholders
+- 📦 Enhanced file storage organization to include images directory
+
 ## [1.2.0] - 2023-06-15
 
 ### Added

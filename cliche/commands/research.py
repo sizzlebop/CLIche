@@ -5,8 +5,13 @@ import click
 import re
 import inspect
 from pathlib import Path
+from rich.console import Console
 from ..core import cli, CLIche, get_llm
 from ..utils.file import save_text_to_file, get_output_dir
+from ..utils.unsplash import UnsplashAPI, format_image_for_markdown, format_image_for_html, get_photo_credit
+
+# Initialize console for rich output
+console = Console()
 
 # Check if the DuckDuckGo search package is available
 try:
@@ -208,15 +213,73 @@ async def extract_content_with_crawler(crawler, url, config, debug=False):
 @click.option("--format", "-f", type=click.Choice(['text', 'markdown', 'html']), default='markdown',
               help='Document format when using --write')
 @click.option("--filename", help="Optional filename for the generated document")
-def research(query, depth, debug, fallback_only, write, format, filename):
-    """Research a topic by searching the web and generating a response based on findings.
+@click.option("--image", "-i", help='Add images related to the topic by search term', type=str)
+@click.option("--image-count", default=3, help='Number of images to add', type=int)
+@click.option("--image-width", default=800, help='Width of images', type=int)
+def research(query, depth, debug, fallback_only, write, format, filename, 
+             image, image_count, image_width):
+    """Research a topic online and generate a response or document.
+    
+    Research uses web search and content extraction to provide up-to-date information
+    on any topic. The results are processed by an AI to create a comprehensive
+    response or document.
     
     Examples:
-        cliche research current AI developments
-        cliche research "Python best practices 2023" --depth 5
-        cliche research "Climate change solutions" --write --format markdown
-        cliche research "Quantum computing advances" --write --filename quantum_research.md
+      cliche research "Latest developments in quantum computing"
+      cliche research "Python async programming best practices" -d 5
+      cliche research "Climate change impacts" --write --format markdown
+      cliche research "Mars exploration" -w -f markdown --image "mars rover" --image-count 2
     """
+    
+    # Join query parts
+    query_str = ' '.join(query)
+    
+    if not query_str:
+        console.print("[bold red]Please provide a search query.[/bold red]")
+        console.print("Example: cliche research \"Latest developments in quantum computing\"")
+        return
+    
+    console.print(f"[bold]Researching:[/bold] {query_str}")
+    
+    # Initialize image data dictionary
+    image_data = {"images": [], "credits": []}
+    
+    # Fetch images if requested for writing mode
+    if write and image:
+        try:
+            unsplash = UnsplashAPI()
+            
+            # Search for images by term
+            console.print(f"🔍 Searching for '{image}' images...")
+            results = unsplash.search_photos(image, per_page=image_count)
+            
+            # Check if we have results
+            photos = results.get('results', [])
+            if not photos:
+                console.print("❌ No images found for this search term.")
+            else:
+                # Download each image
+                for i, photo in enumerate(photos[:image_count]):
+                    photo_id = photo.get('id')
+                    console.print(f"🖼️ Getting image {i+1}/{min(image_count, len(photos))}...")
+                    
+                    try:
+                        photo_data = unsplash.get_photo_url(photo_id, width=image_width)
+                        
+                        # Add to image data
+                        image_data["images"].append({
+                            "url": photo_data["url"],
+                            "alt_text": photo_data["alt_text"],
+                            "width": image_width
+                        })
+                        image_data["credits"].append(get_photo_credit(photo, format))
+                        
+                    except Exception as e:
+                        console.print(f"⚠️ Error getting image: {str(e)}")
+            
+        except Exception as e:
+            console.print(f"⚠️ Error fetching images: {str(e)}")
+            console.print("Continuing without images...")
     
     # Check if required packages are installed
     if DDGS is None:
@@ -239,13 +302,7 @@ def research(query, depth, debug, fallback_only, write, format, filename):
         if write:
             click.echo(f"Document generation enabled with format: {format}")
         
-    query_str = " ".join(query)  # Convert tuple of words into a single string
-    
-    if not query_str:
-        click.echo("Error: No query provided. Please specify what you want to research.")
-        return
-    
-    click.echo(f"🔍 Researching: {query_str}...")
+    console.print(f"🔍 Researching: {query_str}...")
 
     # Perform a web search
     search_results = perform_search(query_str, num_results=depth)
@@ -273,11 +330,11 @@ def research(query, depth, debug, fallback_only, write, format, filename):
                         if not url:
                             continue
                         
-                        click.echo(f"🌐 Scraping: {title}")
+                        console.print(f"🌐 Scraping: {title}")
                         
                         try:
                             if debug:
-                                click.echo(f"  Creating crawler config for {url}")
+                                console.print(f"  Creating crawler config for {url}")
                             
                             config = CrawlerRunConfig(
                                 page_timeout=30000,
@@ -295,10 +352,10 @@ def research(query, depth, debug, fallback_only, write, format, filename):
                                     "content": extracted_text,
                                     "snippet": result.get('snippet', '')
                                 })
-                                click.echo(f"✅ Content extracted: {len(extracted_text)} chars")
+                                console.print(f"✅ Content extracted: {len(extracted_text)} chars")
                             else:
                                 # Try fallback scraping
-                                click.echo(f"⚠️ Primary extraction failed for {title}, trying fallback method...")
+                                console.print(f"⚠️ Primary extraction failed for {title}, trying fallback method...")
                                 fallback_content = await fallback_scrape(url, debug)
                                 
                                 if fallback_content and len(fallback_content) > 100:
@@ -309,19 +366,19 @@ def research(query, depth, debug, fallback_only, write, format, filename):
                                         "content": extracted_text,
                                         "snippet": result.get('snippet', '')
                                     })
-                                    click.echo(f"✅ Fallback extraction succeeded: {len(extracted_text)} chars")
+                                    console.print(f"✅ Fallback extraction succeeded: {len(extracted_text)} chars")
                                 else:
-                                    click.echo(f"⚠️ No content extracted from: {title}")
+                                    console.print(f"⚠️ No content extracted from: {title}")
                         except Exception as e:
                             error_msg = f"❌ Error scraping {url}: {str(e)}"
                             if debug:
                                 import traceback
                                 error_msg += f"\n{traceback.format_exc()}"
-                            click.echo(error_msg)
+                            console.print(error_msg)
                             
                             # Always try fallback when crawler fails
                             try:
-                                click.echo(f"⚠️ Trying fallback scraper after error...")
+                                console.print(f"⚠️ Trying fallback scraper after error...")
                                 fallback_content = await fallback_scrape(url, debug)
                                 
                                 if fallback_content and len(fallback_content) > 100:
@@ -332,17 +389,17 @@ def research(query, depth, debug, fallback_only, write, format, filename):
                                         "content": extracted_text,
                                         "snippet": result.get('snippet', '')
                                     })
-                                    click.echo(f"✅ Fallback extraction succeeded: {len(extracted_text)} chars")
+                                    console.print(f"✅ Fallback extraction succeeded: {len(extracted_text)} chars")
                             except Exception as inner_e:
                                 if debug:
-                                    click.echo(f"⚠️ Fallback scraper also failed: {str(inner_e)}")
+                                    console.print(f"⚠️ Fallback scraper also failed: {str(inner_e)}")
             except Exception as e:
                 error_msg = f"❌ Error initializing crawler: {str(e)}"
                 if debug:
                     import traceback
                     error_msg += f"\n{traceback.format_exc()}"
-                click.echo(error_msg)
-                click.echo("⚠️ Falling back to simple scraper for all URLs")
+                console.print(error_msg)
+                console.print("⚠️ Falling back to simple scraper for all URLs")
         
         # If fallback-only mode or crawler failed completely, use fallback on all URLs
         if fallback_only or (not use_crawler) or (use_crawler and not extracted_data):
@@ -354,9 +411,9 @@ def research(query, depth, debug, fallback_only, write, format, filename):
                     continue
                 
                 if not fallback_only:  # Only show this message if we're not intentionally using fallback only
-                    click.echo(f"🌐 Fallback scraping: {title}")
+                    console.print(f"🌐 Fallback scraping: {title}")
                 else:
-                    click.echo(f"🌐 Scraping: {title}")
+                    console.print(f"🌐 Scraping: {title}")
                     
                 try:
                     fallback_content = await fallback_scrape(url, debug)
@@ -369,71 +426,63 @@ def research(query, depth, debug, fallback_only, write, format, filename):
                             "content": extracted_text,
                             "snippet": result.get('snippet', '')
                         })
-                        click.echo(f"✅ Content extracted: {len(extracted_text)} chars")
+                        console.print(f"✅ Content extracted: {len(extracted_text)} chars")
                     else:
-                        click.echo(f"⚠️ No content extracted from: {title}")
+                        console.print(f"⚠️ No content extracted from: {title}")
                 except Exception as e:
                     error_msg = f"❌ Error scraping {url}: {str(e)}"
                     if debug:
                         import traceback
                         error_msg += f"\n{traceback.format_exc()}"
-                    click.echo(error_msg)
+                    console.print(error_msg)
     
     # Run the scraping
     asyncio.run(scrape_and_extract())
     
     if not extracted_data:
-        click.echo("❌ No content could be extracted from any sources.")
+        console.print("❌ No content could be extracted from any sources.")
         return 1  # Return error code for better detection in test script
     
-    # Format the research prompt for the LLM
-    prompt = f"""Research query: {query_str}
-
-I have gathered information from the following sources:
-
-"""
-
-    for idx, item in enumerate(extracted_data, 1):
-        prompt += f"SOURCE {idx}: {item['title']} ({item['url']})\n"
-        prompt += f"CONTENT: {item['content'][:1500]}...\n\n"  # Trimmed to avoid token limits
-
-    # Add format-specific instructions if writing to a document
-    if write:
-        format_instructions = {
-            'text': 'Write this as a comprehensive, in-depth plain text document in essay format without any special formatting. The document should be at least 1200-1500 words and thoroughly cover all aspects of the topic. Include a numbered references section at the end with the full URL for each reference.',
-            
-            'markdown': 'Write this as a comprehensive, in-depth professional academic essay in markdown format. The document should be at least 1200-1500 words and thoroughly explore all aspects of the topic. Use rich markdown features like headings, paragraphs, bullet points, tables, and emphasis for a well-structured document. Include at least 5-7 distinct sections with proper headings. Use numbered citations in square brackets [1] when referencing sources. Include a "## References" section at the end with a numbered list of all sources used, formatted as proper markdown links that include both the title and clickable URL for each source, e.g., "1. [Source Title](http://source-url.com)".',
-            
-            'html': 'Write this as a comprehensive, in-depth professional academic essay in HTML format. The document should be at least 1200-1500 words and thoroughly explore all aspects of the topic. Use appropriate HTML elements for structure, including headings (h1-h3), paragraphs, lists, and minimal styling. Include at least 5-7 distinct sections with proper headings. Use numbered citations in square brackets [1] when referencing sources. Include a "References" section at the end with a numbered list of all sources used, formatted as proper HTML links, e.g., "<li>1. <a href=\'http://source-url.com\'>Source Title</a></li>".'
-        }[format]
-        
-        prompt += f"""
-Based on these sources, provide a comprehensive, thorough, and detailed essay answering the original query: "{query_str}"
-
-Important formatting instructions:
-1. Write an extensive, in-depth document (minimum 1200-1500 words) that thoroughly covers all aspects of the topic
-2. Structure with a proper introduction, at least 5-7 distinct content sections, and a conclusion
-3. Include all relevant facts, details, and nuances from the sources
-4. If sources contradict each other, analyze the contradictions and different perspectives
-5. Use numbered citations in square brackets [1] to reference sources within the text
-6. Place ALL references in a dedicated "References" section at the END of the document
-7. For each reference, include BOTH the title AND a clickable link to the source URL
-8. Do NOT include inline hyperlinks throughout the main text body
-9. If information is incomplete, acknowledge limitations and suggest areas for further research
-
-{format_instructions}
-
-This document will be used for professional/academic purposes, so maintain a formal tone, thorough analysis, and proper citation format.
-"""
+    # Extract sources information for the LLM
+    sources_info = ""
+    for idx, data in enumerate(extracted_data, 1):
+        sources_info += f"Source {idx}: {data['title']}\n"
+        sources_info += f"URL: {data['url']}\n"
+        sources_info += f"Content: {data['content'][:300]}...\n\n"
+    
+    # Create prompt for document generation
+    if format == 'markdown':
+        doc_template = "Create a comprehensive markdown document about this topic. Use proper markdown formatting with headings, subheadings, lists, code blocks, etc. IMPORTANT: Do NOT include ```markdown or any backtick fences at the beginning or end of the document."
+    elif format == 'html':
+        doc_template = "Create a comprehensive HTML document about this topic. Use proper HTML structure and tags."
     else:
-        prompt += f"""
-Based on these sources, provide a comprehensive answer to the original query: "{query_str}"
-Include relevant facts and details from the sources. If the sources contradict each other, mention this.
-If the information is incomplete or the sources don't fully answer the question, acknowledge this.
-Do not include markdown formatting in your response, just use plain text.
-"""
+        doc_template = "Create a comprehensive document about this topic in plain text format."
+    
+    # Add image instructions if we have images
+    if image_data["images"] and (format == 'markdown' or format == 'html'):
+        doc_template += f"""
 
-    click.echo("🧠 Analyzing collected information...")
+Include {len(image_data['images'])} relevant image placeholders where appropriate in the content.
+IMPORTANT: Use exactly these placeholder formats:
+- For markdown: ![Image Description](IMAGE_{1}) for the first image, ![Image Description](IMAGE_{2}) for the second, etc.
+- For HTML: <img src="IMAGE_{1}" alt="Image Description"> for the first image, etc.
+"""
+    
+    # Build the full prompt
+    prompt = f"""
+    {doc_template}
+    
+    Topic: {query_str}
+    
+    Based on the following web research results, create a well-structured document that covers all important aspects of the topic.
+    
+    RESEARCH DATA:
+    {sources_info}
+    
+    Make the document coherent, informative, and comprehensive.
+    """
+    
+    console.print("🧠 Analyzing collected information...")
     
     # Get the LLM instance
     llm = get_llm()
@@ -442,6 +491,113 @@ Do not include markdown formatting in your response, just use plain text.
         # Generate content - use professional mode for document generation
         professional_mode = write  # Use professional mode when generating a document
         response = asyncio.run(llm.generate_response(prompt, professional_mode=professional_mode))
+        
+        # Process the generated content to replace image placeholders
+        if image_data["images"] and (format == 'markdown' or format == 'html'):
+            print(f"Processing {len(image_data['images'])} images for document")
+            
+            for i, img_data in enumerate(image_data["images"]):
+                # 1-indexed for placeholders
+                img_idx = i + 1
+                
+                if format == 'markdown':
+                    # Try to find patterns with IMAGE placeholder in various formats
+                    img_placeholder_patterns = [
+                        r'!\[([^\]]+)\]\(IMAGE_{}\)'.format(img_idx),  # ![Alt text](IMAGE_n)
+                        r'!\[([^\]]+)\]!\[([^\]]+)\]\(/[^)]+\)'.format(img_idx),  # ![Alt]![Description](/path)
+                        r'!\[([^\]]+)\]IMAGE_{}'.format(img_idx),  # ![Alt]IMAGE_n
+                        r'!\[([^\]]+)\]\[IMAGE_{}\]'.format(img_idx),  # ![Alt][IMAGE_n]
+                        r'\(IMAGE_{}\)'.format(img_idx),  # (IMAGE_n)
+                        r'IMAGE_{}'.format(img_idx)  # IMAGE_n plain
+                    ]
+                    
+                    # Format for Markdown
+                    img_tag = format_image_for_markdown(
+                        img_data["url"], 
+                        img_data["alt_text"], 
+                        img_data["width"]
+                    )
+                    
+                    # First try these exact patterns
+                    image_replaced = False
+                    for pattern in img_placeholder_patterns:
+                        print(f"Looking for pattern: {pattern}")
+                        matches = re.finditer(pattern, response)
+                        for match in matches:
+                            image_replaced = True
+                            full_match = match.group(0)
+                            
+                            # Get the alt text if available, or use a default
+                            try:
+                                alt_text = match.group(1) if match.lastindex and match.lastindex >= 1 else "Image"
+                            except:
+                                alt_text = "Image"
+                                
+                            # Create proper markdown image
+                            proper_image = f"![{alt_text}]({img_data['url']})"
+                            print(f"Replacing '{full_match}' with '{proper_image}'")
+                            response = response.replace(full_match, proper_image)
+                    
+                    # If no pattern matched, fall back to simple replacement
+                    if not image_replaced:
+                        print(f"No complex patterns matched for image {img_idx}, trying simple replacements")
+                        # Try simple replacements
+                        replacements = [
+                            (f"(IMAGE_{img_idx})", f"({img_data['url']})"),
+                            (f"[IMAGE_{img_idx}]", f"[{img_data['url']}]"),
+                            (f"IMAGE_{img_idx}", img_data["url"])
+                        ]
+                        
+                        for old, new in replacements:
+                            if old in response:
+                                print(f"Replacing {old} with {new}")
+                                response = response.replace(old, new)
+                                image_replaced = True
+                                break
+                        
+                    if not image_replaced:
+                        print(f"Unable to find any placeholder for image {img_idx}")
+                
+                elif format == 'html':
+                    # Format for HTML
+                    img_tag = format_image_for_html(
+                        img_data["url"], 
+                        img_data["alt_text"], 
+                        img_data["width"]
+                    )
+                    
+                    # Primary placeholder format: src="IMAGE_{n}"
+                    primary_placeholder = f"IMAGE_{img_idx}"
+                    if primary_placeholder in response:
+                        print(f"Replacing {primary_placeholder} with {img_data['url']}")
+                        response = response.replace(primary_placeholder, img_data["url"])
+                    else:
+                        # Try to find <img src="IMAGE_n" patterns
+                        img_html_pattern = r'<img[^>]*src=["\'](IMAGE_{})["\'][^>]*>'.format(img_idx)
+                        matches = re.finditer(img_html_pattern, response)
+                        img_replaced = False
+                        for match in matches:
+                            img_replaced = True
+                            full_match = match.group(0)
+                            # Replace just the src attribute
+                            new_img_tag = full_match.replace(f'src="{primary_placeholder}"', f'src="{img_data["url"]}"')
+                            response = response.replace(full_match, new_img_tag)
+                            print(f"Replaced HTML img tag: {full_match} with {new_img_tag}")
+                        
+                        if not img_replaced:
+                            print(f"Cannot find {primary_placeholder} in HTML, tried pattern: {img_html_pattern}")
+            
+            # Add credits at the end of the document
+            if image_data["credits"]:
+                if format == 'markdown':
+                    response += "\n\n---\n\n## Image Credits\n\n"
+                    for credit in image_data["credits"]:
+                        response += f"* {credit}\n"
+                else:
+                    response += "\n\n<hr>\n<h2>Image Credits</h2>\n<ul>\n"
+                    for credit in image_data["credits"]:
+                        response += f"<li>{credit}</li>\n"
+                    response += "</ul>\n"
         
         # Determine what to do with the response based on write flag
         if write:
@@ -482,7 +638,15 @@ Do not include markdown formatting in your response, just use plain text.
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Research: {query_str}</title>
+    <title>{query_str} - Research</title>
+    <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }}
+        img {{ max-width: 100%; height: auto; display: block; margin: 20px 0; }}
+        code {{ background-color: #f5f5f5; padding: 2px 4px; border-radius: 3px; }}
+        pre {{ background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }}
+        h1, h2, h3 {{ color: #333; }}
+        .unsplash-image {{ border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
+    </style>
 </head>
 <body>
 {response}
@@ -491,24 +655,24 @@ Do not include markdown formatting in your response, just use plain text.
             
             # Save to file
             save_text_to_file(response, file_path)
-            click.echo(f"✅ Research document saved to: {file_path}")
+            console.print(f"✅ Research document saved to: {file_path}")
         else:
             # Display the response in terminal
-            click.echo("\n" + "=" * 60)
-            click.echo("📊 RESEARCH RESULTS")
-            click.echo("=" * 60)
-            click.echo(f"\n💡 {response}\n")
-            click.echo("=" * 60)
-            click.echo(f"Sources: {len(extracted_data)} websites analyzed")
-            click.echo("=" * 60)
+            console.print("\n" + "=" * 60)
+            console.print("📊 RESEARCH RESULTS")
+            console.print("=" * 60)
+            console.print(f"\n💡 {response}\n")
+            console.print("=" * 60)
+            console.print(f"Sources: {len(extracted_data)} websites analyzed")
+            console.print("=" * 60)
         
         return 0  # Return success code
         
     except AttributeError as e:
-        click.echo("❌ Error: Provider not properly configured")
+        console.print("❌ Error: Provider not properly configured")
         return 1  # Return error code
     except Exception as e:
-        click.echo(f"❌ Error generating response: {str(e)}")
+        console.print(f"❌ Error generating response: {str(e)}")
         return 1  # Return error code
 
 if __name__ == "__main__":
