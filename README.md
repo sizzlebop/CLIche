@@ -15,6 +15,7 @@
 ## Latest Features
 
 - 🖼️ **Direct Image URLs**: Unsplash images are now embedded with direct URLs for better sharing and compatibility
+- 📚 **Advanced Document Generation**: Intelligent chunking for comprehensive documents with the option for concise summaries
 - 🔍 **Web Research**: Get up-to-date information from the web with `research` command
 - 🕸️ **Web Scraping**: Extract and save content from websites with `scrape` command
 - 📝 **Document Generation**: Create professional documents from scraped or researched data
@@ -223,12 +224,21 @@ The `scrape` and `generate` commands work together to extract and process web co
 # Scrape a specific URL with topic focus
 cliche scrape "https://docs.python.org/3/library/asyncio.html" --topic "Python async"
 
-# Generate a document from previously scraped content
+# Generate a comprehensive document from previously scraped content (default)
 cliche generate "Python async" --format markdown
+
+# Generate a concise summary document instead
+cliche generate "Python async" --format markdown --summarize
 
 # Generate a document with images
 cliche generate "Python async" --format markdown --image "python programming" --image-count 2
 ```
+
+The `generate` command uses an advanced chunking approach that:
+- Extracts major sections from scraped content
+- Processes each section individually with the LLM
+- Preserves all technical details and code examples
+- Handles large content volumes efficiently
 
 See [SCRAPE_COMMAND_README.md](SCRAPE_COMMAND_README.md) for more details.
 

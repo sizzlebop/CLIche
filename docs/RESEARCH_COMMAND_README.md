@@ -130,6 +130,34 @@ The research command follows these steps:
    - Applies selected tone (snarky or professional)
    - Formats output for terminal display or document generation
 
+## Document Generation Modes
+
+When using the `--write` flag to generate a document, the research command leverages CLIche's advanced document generation capabilities:
+
+### Comprehensive Documents (Default)
+
+By default, the research command generates comprehensive documents that:
+
+1. **Use Intelligent Chunking**: The system:
+   - Extracts major sections from the researched content
+   - Identifies natural section boundaries (headings, capitalized titles, etc.) 
+   - Creates artificial sections when natural boundaries aren't found
+   - Processes each section individually with the LLM to retain full detail
+   - Combines sections into a cohesive document with proper structure
+
+2. **Preserve Technical Depth**: All technical details, code examples, and explanations from the research are maintained.
+
+3. **Handle Large Content Volumes**: By breaking content into manageable chunks, it can process much larger documents than would fit in a single LLM context window.
+
+Example:
+```bash
+cliche research "Python asyncio programming" --write --format markdown
+```
+
+### Adding a Future Feature: Summary Mode
+
+In an upcoming release, the research command will also support a `--summarize` flag (similar to the `generate` command) that will create more concise document summaries. This feature is currently in development.
+
 ## Image Integration with Direct URLs
 
 When using the `--image` option with the `research` command, CLIche now embeds images with direct URLs from Unsplash instead of downloading them locally. This offers several advantages:

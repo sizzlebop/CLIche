@@ -14,6 +14,7 @@ CLIche includes powerful web scraping capabilities that allow you to extract and
   - [Options](#options-1)
   - [Examples](#examples-1)
 - [Helper Scripts](#helper-scripts)
+- [Document Generation Modes](#document-generation-modes)
 - [Advanced Usage](#advanced-usage)
 - [Troubleshooting](#troubleshooting)
 
@@ -149,6 +150,63 @@ Example:
 ```bash
 ./generate.sh "Python async" markdown
 ```
+
+## Document Generation Modes
+
+The `generate` command supports two main modes of operation: comprehensive and summary modes, controlled by the `--summarize` flag.
+
+### Comprehensive Mode (Default)
+
+When running the command without the `--summarize` flag, CLIche uses an advanced chunking approach to generate detailed, complete documentation:
+
+```bash
+cliche generate "Python async" --format markdown
+```
+
+The comprehensive mode:
+
+1. **Preserves All Technical Details**: Unlike the summary mode, comprehensive mode retains all technical details, code examples, and in-depth explanations from the source material.
+
+2. **Uses Intelligent Chunking**: The system:
+   - Extracts major sections from scraped content
+   - Identifies natural section boundaries (headings, capitalized titles, etc.)
+   - Creates artificial sections when natural boundaries aren't found
+   - Processes each section individually with the LLM to ensure high quality
+   - Combines sections into a cohesive document with proper structure
+
+3. **Handles Large Content Volumes**: By breaking content into chunks of 2000-3000 characters each, it can process much larger documents than would fit in a single LLM context window.
+
+4. **Maintains Document Structure**: The chunking approach preserves proper document structure with:
+   - Consistent title and introduction
+   - Automatically generated table of contents
+   - Well-organized sections based on content
+   - Proper conclusion that summarizes main points
+
+### Summary Mode
+
+When you need a more concise output, use the `--summarize` flag:
+
+```bash
+cliche generate "Python async" --format markdown --summarize
+```
+
+The summary mode:
+- Generates a shorter, more focused document
+- Extracts and condenses the most important information
+- Follows a more traditional approach without advanced chunking
+- Is ideal for quick reference documents
+
+### When to Use Each Mode
+
+- **Use Comprehensive Mode (Default) When:**
+  - You need all technical details and examples
+  - The full depth of information is important
+  - You're creating reference documentation
+
+- **Use Summary Mode When:**
+  - You need a quick overview
+  - File size and brevity are priorities
+  - You want a condensed version for quick scanning
 
 ## Advanced Usage
 
