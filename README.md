@@ -14,6 +14,7 @@
 
 ## Latest Features
 
+- 📂 **Automatic Unique File Naming**: Generate multiple documents on the same topic without overwriting previous files
 - 🖼️ **Direct Image URLs**: Unsplash images are now embedded with direct URLs for better sharing and compatibility
 - 📚 **Advanced Document Generation**: Intelligent chunking for comprehensive documents with the option for concise summaries
 - 🔍 **Web Research**: Get up-to-date information from the web with `research` command
@@ -179,8 +180,12 @@ cliche ansi
 
 12. View a generated file:
 ```bash
-cliche view my_file.md --type write
-cliche view game.py --type code
+cliche view my_file.md --format write
+cliche view game.py --format code
+cliche view research_commands_in_linux.md --format docs --source research
+cliche view python_async_markdown.md --format docs --source scrape
+# Or simply by filename, which will search in all docs directories:
+cliche view research_commands_in_linux.md
 ```
 
 13. Search for files:
@@ -364,6 +369,23 @@ If you encounter any issues or have questions, please:
 1. Check the [FAQ](docs/FAQ.md)
 2. Search existing [Issues](https://github.com/pinkpixel-dev/cliche/issues)
 3. Create a new issue if needed
+
+## File Organization
+
+CLIche organizes all generated files in a structured directory hierarchy:
+
+```
+~/cliche/files/
+├── docs/              # All generated documents
+│   ├── research/      # Research command documents
+│   ├── write/         # Write command documents
+│   └── scrape/        # Documents from scraped content
+├── code/              # Generated code files
+├── images/            # Downloaded images (when using image --download)
+└── scrape/            # Raw scraped data (JSON format)
+```
+
+When multiple documents are generated with the same topic or filename, CLIche automatically adds incremental suffixes (_1, _2, etc.) to prevent overwriting existing files.
 
 ---
 Made with ❤️ by Pink Pixel;

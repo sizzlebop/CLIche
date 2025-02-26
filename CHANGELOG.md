@@ -16,6 +16,22 @@ All notable changes to the CLIche project will be documented in this file.
 - 🔄 Modified image processing to use direct Unsplash URLs in documents instead of downloading
 - 🧩 Removed non-standard markdown syntax for better compatibility
 
+## [1.3.2] - 2024-07-27
+
+### Enhanced
+- 🔍 Improved `research` command with cleaner extraction messages
+  - Removed confusing technical extraction failure messages
+  - Simplified success messages for better user experience
+- 📂 Enhanced file naming with automatic incremental suffixes
+  - Prevents overwriting of existing files
+  - Adds numbering (_1, _2, etc.) to files with the same base name
+  - Works across all document generation commands (research, write, generate, scrape)
+- 📝 Updated documentation to reflect new file naming convention
+
+### Fixed
+- 🔄 Ensured consistent messaging in the terminal during research and content extraction
+- 🧩 Cleaned up output during web content processing
+
 ## [1.3.0] - 2024-07-15
 
 ### Added

@@ -10,6 +10,7 @@ The `research` command allows you to obtain up-to-date information from the web 
 - [Examples](#examples)
 - [How It Works](#how-it-works)
 - [Professional Mode](#professional-mode)
+- [Automatic Unique File Naming](#automatic-unique-file-naming)
 - [Troubleshooting](#troubleshooting)
 - [Advanced Usage](#advanced-usage)
 
@@ -176,6 +177,28 @@ cliche research "Renewable energy trends" --write --image "solar energy" --image
 
 This will create a research document about renewable energy trends with three solar energy images embedded with direct Unsplash URLs, properly attributed in the document.
 
+## Automatic Unique File Naming
+
+The research command now implements automatic unique file naming to prevent overwriting existing files. When you generate multiple documents on the same topic:
+
+- First document: `research_your_topic.md`
+- Second document: `research_your_topic_1.md`
+- Third document: `research_your_topic_2.md`
+
+This allows you to:
+- Generate multiple variations of research on the same topic for comparison
+- Keep a history of your research
+- Avoid accidentally overwriting previous work
+
+All generated documents are stored in the `~/.cliche/files/docs/research/` directory for easy organization and access.
+
+Example:
+```bash
+# Run twice to see the unique naming in action
+cliche research "Space exploration" --write --format markdown
+cliche research "Space exploration" --write --format markdown
+```
+
 ## Professional Mode
 
 By default, CLIche maintains its snarky personality when presenting research results. For more formal or educational contexts, use the `--professional` flag to generate responses with a professional tone.
@@ -232,7 +255,7 @@ Research results can be used with other CLIche commands for more comprehensive w
 cliche research "Deep sea creatures" --write --format markdown --image "deep sea animals" --image-count 3
 
 # View the generated document
-cliche view ~/.cliche/files/research/deep_sea_creatures.md
+cliche view ~/cliche/files/docs/research/deep_sea_creatures.md
 ```
 
 **Research to Scrape Pipeline:**

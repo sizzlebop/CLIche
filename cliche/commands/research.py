@@ -1,3 +1,7 @@
+"""
+Web research command for CLIche.
+Enables research with up-to-date web content.
+"""
 import os
 import json
 import asyncio
@@ -7,7 +11,7 @@ import inspect
 from pathlib import Path
 from rich.console import Console
 from ..core import cli, CLIche, get_llm
-from ..utils.file import save_text_to_file, get_output_dir
+from ..utils.file import save_text_to_file, get_docs_dir, get_unique_filename
 from ..utils.unsplash import UnsplashAPI, format_image_for_markdown, format_image_for_html, get_photo_credit
 
 # Initialize console for rich output
@@ -355,7 +359,7 @@ def research(query, depth, debug, fallback_only, write, format, filename,
                                 console.print(f"✅ Content extracted: {len(extracted_text)} chars")
                             else:
                                 # Try fallback scraping
-                                console.print(f"⚠️ Primary extraction failed for {title}, trying fallback method...")
+                                # Try alternate extraction method
                                 fallback_content = await fallback_scrape(url, debug)
                                 
                                 if fallback_content and len(fallback_content) > 100:
@@ -366,9 +370,20 @@ def research(query, depth, debug, fallback_only, write, format, filename,
                                         "content": extracted_text,
                                         "snippet": result.get('snippet', '')
                                     })
-                                    console.print(f"✅ Fallback extraction succeeded: {len(extracted_text)} chars")
+                                    console.print(f"✅ Extraction succeeded: {len(extracted_text)} chars")
                                 else:
-                                    console.print(f"⚠️ No content extracted from: {title}")
+                                    # Try alternate extraction method
+                                    fallback_content = await fallback_scrape(url, debug)
+                                    
+                                    if fallback_content and len(fallback_content) > 100:
+                                        extracted_text = fallback_content[:3000]  # Limit content size
+                                        extracted_data.append({
+                                            "title": title,
+                                            "url": url,
+                                            "content": extracted_text,
+                                            "snippet": result.get('snippet', '')
+                                        })
+                                        console.print(f"✅ Extraction succeeded: {len(extracted_text)} chars")
                         except Exception as e:
                             error_msg = f"❌ Error scraping {url}: {str(e)}"
                             if debug:
@@ -389,7 +404,7 @@ def research(query, depth, debug, fallback_only, write, format, filename,
                                         "content": extracted_text,
                                         "snippet": result.get('snippet', '')
                                     })
-                                    console.print(f"✅ Fallback extraction succeeded: {len(extracted_text)} chars")
+                                    console.print(f"✅ Extraction succeeded: {len(extracted_text)} chars")
                             except Exception as inner_e:
                                 if debug:
                                     console.print(f"⚠️ Fallback scraper also failed: {str(inner_e)}")
@@ -416,6 +431,7 @@ def research(query, depth, debug, fallback_only, write, format, filename,
                     console.print(f"🌐 Scraping: {title}")
                     
                 try:
+                    # Try fallback scraping
                     fallback_content = await fallback_scrape(url, debug)
                     
                     if fallback_content and len(fallback_content) > 100:
@@ -426,7 +442,7 @@ def research(query, depth, debug, fallback_only, write, format, filename,
                             "content": extracted_text,
                             "snippet": result.get('snippet', '')
                         })
-                        console.print(f"✅ Content extracted: {len(extracted_text)} chars")
+                        console.print(f"✅ Extraction succeeded: {len(extracted_text)} chars")
                     else:
                         console.print(f"⚠️ No content extracted from: {title}")
                 except Exception as e:
@@ -452,7 +468,38 @@ def research(query, depth, debug, fallback_only, write, format, filename,
     
     # Create prompt for document generation
     if format == 'markdown':
-        doc_template = "Create a comprehensive markdown document about this topic. Use proper markdown formatting with headings, subheadings, lists, code blocks, etc. IMPORTANT: Do NOT include ```markdown or any backtick fences at the beginning or end of the document."
+        doc_template = """Create a comprehensive markdown document about this topic. Use proper markdown formatting with headings, subheadings, lists, and code blocks. 
+
+For code blocks, use the following format:
+```language_name
+code goes here
+```
+
+Ensure there's an empty line before and after each code block. Always specify a language for syntax highlighting (e.g., ```bash, ```python, etc.).
+
+For all markdown headings, use the following format:
+# Main Title (H1)
+## Section Title (H2)
+### Subsection Title (H3)
+
+When creating a Table of Contents, follow these formatting rules:
+1. Include an anchor ID that exactly matches the heading text but converted to lowercase with spaces replaced by hyphens
+2. Remove any special characters from anchor IDs (keep only letters, numbers, and hyphens)
+3. Use this format for all TOC entries: [Exact Section Title](#lowercase-with-hyphens)
+
+For example:
+## Table of Contents
+1. [Introduction](#introduction)
+2. [Basic Commands](#basic-commands)
+3. [Advanced Usage](#advanced-usage)
+   - [Sub-Feature One](#sub-feature-one)
+   - [Sub-Feature Two](#sub-feature-two)
+
+Do not use bold formatting (**text**) for TOC entries - always use proper link syntax.
+
+EXTREMELY IMPORTANT: Do NOT include ```markdown or ```anything at the beginning of the document. 
+EXTREMELY IMPORTANT: Do NOT include ``` at the end of the document.
+EXTREMELY IMPORTANT: Only use triple backticks for actual code blocks within the document, not for the document itself."""
     elif format == 'html':
         doc_template = "Create a comprehensive HTML document about this topic. Use proper HTML structure and tags."
     else:
@@ -613,10 +660,12 @@ IMPORTANT: Use exactly these placeholder formats:
             if not filename:
                 # Create a filename from the first few words of the query
                 words = query_str.lower().split()[:3]
-                filename = 'research_' + '_'.join(words) + ext
-                # Use the .cliche/files/docs directory
-                output_dir = get_output_dir('docs')
-                file_path = str(output_dir / filename)
+                base_filename = 'research_' + '_'.join(words) + ext
+                # Use the docs/research directory for organization
+                output_dir = get_docs_dir('research')
+                # Get a unique filename
+                unique_filename = get_unique_filename(output_dir, base_filename)
+                file_path = str(output_dir / unique_filename)
             else:
                 # Make sure filename has correct extension
                 if not any(filename.endswith(e) for e in ['.txt', '.md', '.html']):
@@ -627,9 +676,11 @@ IMPORTANT: Use exactly these placeholder formats:
                     # If a full path is provided, use it
                     file_path = filename
                 else:
-                    # Otherwise, put it in the docs directory
-                    output_dir = get_output_dir('docs')
-                    file_path = str(output_dir / filename)
+                    # Otherwise, put it in the docs/research directory
+                    output_dir = get_docs_dir('research')
+                    # Get a unique filename
+                    unique_filename = get_unique_filename(output_dir, filename)
+                    file_path = str(output_dir / unique_filename)
             
             # Ensure HTML has proper structure
             if format == 'html' and not response.strip().startswith('<!DOCTYPE html>'):
