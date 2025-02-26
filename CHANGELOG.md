@@ -2,6 +2,16 @@
 
 All notable changes to the CLIche project will be documented in this file.
 
+## [1.3.3] - 2024-08-01
+
+### Fixed
+- 🔧 Fixed primary web crawler functionality in research command
+  - Updated to use correct crawler methods (`arun`, `aprocess_html`) available in current `crawl4ai` version
+  - Improved error handling and content extraction reliability
+  - Enhanced debugging information for troubleshooting
+  - Better fallback behavior when primary extraction fails
+- 🧩 Added crawler method detection to adapt to different `crawl4ai` versions
+
 ## [1.3.1] - 2024-07-20
 
 ### Enhanced
@@ -27,10 +37,20 @@ All notable changes to the CLIche project will be documented in this file.
   - Adds numbering (_1, _2, etc.) to files with the same base name
   - Works across all document generation commands (research, write, generate, scrape)
 - 📝 Updated documentation to reflect new file naming convention
+- 🔧 Improved code block extraction in the `scrape` command
+  - Added language detection for code blocks 
+  - Properly formats code blocks with appropriate language specifiers
+  - Better handles nested code blocks in div containers
+  - Enhanced Wikipedia content extraction with proper code block formatting
 
 ### Fixed
 - 🔄 Ensured consistent messaging in the terminal during research and content extraction
 - 🧩 Cleaned up output during web content processing
+- 📄 Fixed markdown code block formatting issues in generated documents
+  - Properly closes code blocks that were previously left open
+  - Fixes broken language specifiers (e.g., ```pytho\nn → ```python)
+  - Ensures proper spacing before and after code blocks
+  - Improves instructions to LLM for better code block formatting
 
 ## [1.3.0] - 2024-07-15
 
