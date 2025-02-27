@@ -19,9 +19,30 @@ class UnsplashAPI:
         Args:
             api_key: Optional API key. If not provided, will try to get from environment.
         """
-        self.api_key = api_key or os.getenv('UNSPLASH_API_KEY')
+        # First try the provided API key
+        self.api_key = api_key
+        
+        # If not provided, try to get from environment
         if not self.api_key:
-            raise ValueError("Unsplash API key not found. Set UNSPLASH_API_KEY in .env file.")
+            self.api_key = os.getenv('UNSPLASH_API_KEY')
+        
+        # If still not found, check the config file directly
+        if not self.api_key:
+            try:
+                from ..core import Config
+                config = Config()
+                if 'services' in config.config and 'unsplash' in config.config['services']:
+                    self.api_key = config.config['services']['unsplash'].get('api_key')
+                # Also check in providers section as a fallback if it exists there
+                elif 'providers' in config.config and 'unsplash' in config.config['providers']:
+                    self.api_key = config.config['providers']['unsplash'].get('api_key')
+            except Exception as e:
+                # If there's any error loading the config, just continue
+                pass
+        
+        # If API key is still not found, raise an error
+        if not self.api_key:
+            raise ValueError("Unsplash API key not found. Please configure it with 'cliche config --unsplash-key YOUR_API_KEY'")
         
         self.api_base = "https://api.unsplash.com"
         self.headers = {
