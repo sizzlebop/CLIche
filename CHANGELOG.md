@@ -4,6 +4,13 @@ All notable changes to the CLIche project will be documented in this file.
 
 ## [Pre-Release Beta]
 
+### Fixed
+- 🔧 Improved Unsplash API key handling
+  - Added multiple fallback methods for finding the API key
+  - Updated error message with clearer configuration instructions
+  - Fixed issues with running CLIche outside the normal environment
+  - Cleaned up redundant entries in config file
+
 ### Enhanced
 - 🧹 Improved placeholder cleanup in document generation
   - Added specific cleanup for legacy image placeholder patterns
