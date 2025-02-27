@@ -270,11 +270,12 @@ When using the `--image` option with commands like `research`, `generate`, or `w
 
 ### AI-Powered Image Placement
 
-CLIche now uses advanced AI to intelligently place images at contextually relevant positions in your documents:
+CLIche uses advanced AI to intelligently place images at contextually relevant positions in your documents:
 
 1. **Content Analysis** - The AI analyzes your document content to understand the topics and concepts
 2. **Optimal Positioning** - Images are placed at locations where they best enhance understanding
 3. **Natural Integration** - No more arbitrary image placement or manual placeholders required
+4. **Consistent Experience** - The same powerful approach is used across all document generation commands
 
 When no explicit image placeholders are found, the system automatically:
 - Analyzes document content and structure

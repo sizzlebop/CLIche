@@ -248,11 +248,12 @@ When using the `--image` option with the `generate` command, CLIche embeds image
 
 ### AI-Powered Contextual Image Placement
 
-The `generate` command now features intelligent image placement powered by AI:
+The `generate` command features intelligent image placement powered by AI:
 
 - **Content Analysis**: The AI analyzes your document content to understand the topics, concepts, and structure
 - **Contextual Placement**: Images are automatically placed at positions where they best enhance understanding
 - **Smart Fallbacks**: If optimal positions can't be determined, images are evenly distributed at logical points
+- **Consistent Experience**: Uses the same approach across all document generation commands
 
 This feature works automatically when adding images to generated documents without requiring manual image placeholders. The system will:
 

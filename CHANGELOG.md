@@ -2,6 +2,15 @@
 
 All notable changes to the CLIche project will be documented in this file.
 
+## [Unreleased]
+
+### Enhanced
+- 🔄 Standardized image handling across research and write commands
+  - Removed legacy image placeholder instructions in research command
+  - Unified both commands to use AI-powered contextual image placement
+  - Simplified the codebase by using consistent approach for all document generation
+  - Improved user experience with cleaner output messages
+
 ## [1.3.4] - 2024-08-02
 
 ### Enhanced

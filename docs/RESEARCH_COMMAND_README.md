@@ -196,11 +196,12 @@ When using the `--image` option with the `research` command, CLIche now embeds i
 
 ### AI-Powered Contextual Image Placement
 
-CLIche now features intelligent image placement powered by AI:
+CLIche features intelligent image placement powered by AI:
 
 - **Content Analysis**: The AI analyzes your research document content to understand the topics, concepts, and structure
 - **Contextual Placement**: Images are automatically placed at positions where they best enhance understanding
 - **Smart Fallbacks**: If optimal positions can't be determined, images are evenly distributed at logical points
+- **Consistent Experience**: Uses the same approach across all document generation commands
 
 This feature works automatically when adding images to research documents without requiring manual image placeholders. The system will:
 

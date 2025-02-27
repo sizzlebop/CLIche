@@ -657,24 +657,6 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
             elif summarize:
                 if format == 'markdown':
                     doc_template = """
-                    ===== CRITICALLY IMPORTANT IMAGE INSTRUCTIONS =====
-                    You MUST include image placeholders in your document exactly like this:
-                    - [INSERT_IMAGE_1_HERE] for the first image
-                    - [INSERT_IMAGE_2_HERE] for the second image (if available)
-                    - [INSERT_IMAGE_3_HERE] for the third image (if available)
-                    
-                    Example of correct insertion:
-                    "<p>This technology has wide applications. [INSERT_IMAGE_1_HERE] As shown above...</p>"
-                    
-                    Place these placeholders at meaningful points throughout your document:
-                    - After introductory paragraphs
-                    - When illustrating key concepts
-                    - At major section transitions
-                    - When discussing visual concepts
-                    
-                    DO NOT cluster all images together - evenly distribute them throughout different sections.
-                    ==============================================
-                    
                     Create a CONCISE SUMMARY document about this topic.
                     
                     The summary should be informative but significantly shorter than a comprehensive document.
@@ -702,35 +684,21 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
                     - Current relevance
                     
                     Keep the length moderate (around 800-1000 words).
-                    
-                    ===== CRITICALLY IMPORTANT IMAGE INSTRUCTIONS =====
-                    You MUST include image placeholders in your document exactly like this:
-                    - [INSERT_IMAGE_1_HERE] for the first image
-                    - [INSERT_IMAGE_2_HERE] for the second image (if available)
-                    - [INSERT_IMAGE_3_HERE] for the third image (if available)
-                    
-                    Example of correct insertion:
-                    "<p>This technology has wide applications. [INSERT_IMAGE_1_HERE] As shown above...</p>"
-                    
-                    Place these placeholders at meaningful points throughout your document:
-                    - After introductory paragraphs
-                    - When illustrating key concepts
-                    - At major section transitions
-                    - When discussing visual concepts
-                    
-                    DO NOT cluster all images together - evenly distribute them throughout different sections.
-                    ==============================================
-                    
-                    Create a CONCISE SUMMARY document about this topic in HTML format. The ENTIRE content must use proper HTML tags, not Markdown.
-                    
-                    The summary should be informative but significantly shorter than a comprehensive document.
-                    Focus on providing:
-                    - Clear definition and overview
-                    - Key points and important aspects
-                    - Basic background information
-                    - Current relevance
-                    
-                    Keep the length moderate (around 800-1000 words).
+
+EXTREMELY IMPORTANT: You MUST use HTML tags for EVERYTHING and NEVER use Markdown syntax anywhere in your response.
+For example:
+- CORRECT: <h1>Main Heading</h1>
+- INCORRECT: # Main Heading
+
+- CORRECT: <p>This is a paragraph with <strong>bold text</strong>.</p>
+- INCORRECT: This is a paragraph with **bold text**.
+
+- CORRECT: <ul><li>List item</li></ul>
+- INCORRECT: - List item
+
+DO NOT EVER USE # FOR HEADINGS OR ** FOR BOLD TEXT OR - FOR LISTS. Always use proper HTML tags.
+
+Every single piece of content must be enclosed in appropriate HTML tags. Do not mix HTML and Markdown syntax anywhere.
                     """
                 else:
                     doc_template = """Create a CONCISE SUMMARY document about this topic.
@@ -748,10 +716,8 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
             # Get image instructions if we have images
             image_instructions = ""
             if image_data["images"] and (format == 'markdown' or format == 'html'):
-                from cliche.utils.generate_from_scrape import add_image_instructions
-                image_instructions = add_image_instructions(image_data)
-                # Add extra emphasis on not using code fences
-                image_instructions += "\n\nEXTREMELY IMPORTANT: Do NOT start your response with ```markdown or any code fences. Do NOT enclose your entire response in code fences."
+                # No need for special image placeholder instructions anymore
+                image_instructions = "\n\nEXTREMELY IMPORTANT: Do NOT start your response with ```markdown or any code fences. Do NOT enclose your entire response in code fences."
             
             # Build the prompt with image instructions placed prominently
             prompt = f"""
@@ -802,24 +768,6 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
                 if format == 'markdown':
                     if chunk_start == 0:  # First chunk includes introduction
                         doc_template = """
-                        ===== CRITICALLY IMPORTANT IMAGE INSTRUCTIONS =====
-                        You MUST include image placeholders in your document exactly like this:
-                        - [INSERT_IMAGE_1_HERE] for the first image
-                        - [INSERT_IMAGE_2_HERE] for the second image (if available)
-                        - [INSERT_IMAGE_3_HERE] for the third image (if available)
-                        
-                        Example of correct insertion:
-                        "Machine learning has revolutionized data analysis. [INSERT_IMAGE_1_HERE] This breakthrough..."
-                        
-                        Place these placeholders at meaningful points throughout your document:
-                        - After introductory paragraphs
-                        - When illustrating key concepts
-                        - At major section transitions
-                        - When discussing visual concepts
-                        
-                        DO NOT cluster all images together - evenly distribute them throughout different sections.
-                        ==============================================
-                        
                         Create the FIRST PART of an extremely detailed, comprehensive markdown document about this topic.
             
                         Please focus on the INTRODUCTION and FIRST MAJOR SECTIONS of the topic, covering:
@@ -857,7 +805,7 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
             
             IMPORTANT INSTRUCTIONS FOR IMAGE PLACEMENT:
             - If images are provided, include placeholder markers like [INSERT_IMAGE_1_HERE], [INSERT_IMAGE_2_HERE], etc.
-            - Place these image placeholders at meaningful points throughout your response, not all at the beginning
+            - Place these placeholders at meaningful points throughout your response, not all at the beginning
             - Good places for images are after introductory paragraphs or to illustrate key concepts
             - Do not cluster all images together - spread them throughout different sections."""
                 elif format == 'html':
@@ -984,16 +932,14 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
         
         # Process the generated content to replace image placeholders
         if image_data["images"] and (format == 'markdown' or format == 'html'):
-            print(f"🖼️ Processing {len(image_data['images'])} images for document")
-            print(f"🔍 Document length: {len(response)} characters")
+            console.print(f"🖼️ Processing {len(image_data['images'])} images for document")
             
-            # Debug: Check if any IMAGE_ string appears at all in the document
-            all_image_indicators = len(re.findall(r'IMAGE_\d+', response))
-            print(f"🔍 Found {all_image_indicators} instances of IMAGE_n in document")
+            # Check if any IMAGE_ placeholders are in the document
+            placeholders_found = len(re.findall(r'\bIMAGE_\d+\b', response))
             
-            # If no placeholders found, let's use LLM to suggest image placement
-            if all_image_indicators == 0:
-                print("💡 Using AI-powered image placement to find optimal locations...")
+            # If no placeholders found, use AI-powered image placement
+            if placeholders_found == 0:
+                console.print("💡 Using AI-powered image placement to enhance the document...")
                 
                 # Split response into paragraphs for placement
                 paragraphs = response.split('\n\n')
@@ -1001,7 +947,6 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
                 # Get LLM recommendations for image placement
                 insertion_points = None
                 try:
-                    # Use asyncio.run to execute the async function
                     insertion_points = asyncio.run(get_image_placement_suggestions(
                         llm=llm, 
                         document_content=response, 
@@ -1010,271 +955,98 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
                         format=format
                     ))
                 except Exception as e:
-                    print(f"⚠️ Error getting image placement suggestions: {str(e)}")
+                    console.print(f"⚠️ Error getting image placement suggestions: {str(e)}")
                     insertion_points = None
                 
                 # If LLM suggestions aren't available or valid, fallback to our distribution method
                 if not insertion_points:
-                    print("⚠️ Couldn't get valid placement suggestions, falling back to evenly distributed images...")
-                    
                     # Find headings to identify section breaks
                     heading_indices = [i for i, p in enumerate(paragraphs) if p.startswith('#')]
                     
-                    # If we have enough headings, distribute images evenly across the document
+                    # If we have enough headings, distribute images after headings
                     if len(heading_indices) >= len(image_data["images"]):
                         # Choose evenly spaced heading indices
                         step = len(heading_indices) // (len(image_data["images"]) + 1)
                         if step < 1:
                             step = 1
                         
-                        # Select insertion points after evenly distributed headings
                         insertion_points = []
                         for i in range(1, len(image_data["images"]) + 1):
                             idx = min(i * step, len(heading_indices) - 1)
                             heading_idx = heading_indices[idx]
-                            # Insert after the paragraph following the heading
                             insertion_point = min(heading_idx + 1, len(paragraphs) - 1)
                             if insertion_point not in insertion_points:
                                 insertion_points.append(insertion_point)
                     else:
-                        # Not enough headings, distribute evenly throughout the document
+                        # Not enough headings, distribute evenly throughout document
                         total_paragraphs = len(paragraphs)
                         spacing = total_paragraphs // (len(image_data["images"]) + 1)
                         
-                        # Ensure we don't insert at the very beginning
+                        # Ensure we don't insert at the beginning
                         start_point = min(4, total_paragraphs // 10)
                         
                         insertion_points = []
                         for i in range(len(image_data["images"])):
                             # Calculate position ensuring even distribution
                             pos = start_point + (i + 1) * spacing
-                            pos = min(pos, total_paragraphs - 1)  # Stay within bounds
+                            pos = min(pos, total_paragraphs - 1)
                             
-                            # Avoid inserting immediately before a heading
+                            # Avoid inserting before headings
                             if pos < total_paragraphs - 1 and paragraphs[pos + 1].startswith('#'):
-                                pos += 2  # Skip past the heading and to the content
+                                pos += 2
                             
                             if pos not in insertion_points and pos < total_paragraphs:
                                 insertion_points.append(pos)
                 
-                # Sort insertion points to maintain document structure
-                insertion_points.sort()
-                print(f"💡 Selected {len(insertion_points)} insertion points at paragraph indices: {insertion_points}")
-                
-                # Make sure we don't have more insertion points than images
-                insertion_points = insertion_points[:len(image_data["images"])]
-                
-                # Insert images at the chosen points
-                for i, insertion_idx in enumerate(insertion_points):
-                    if i < len(image_data["images"]):
-                        img_data = image_data["images"][i]
-                        img_alt = img_data["alt_text"] or "Image"
-                        
-                        if format == 'markdown':
-                            img_content = f"\n\n![{img_alt}]({img_data['url']})\n\n"
-                        else:  # HTML format
-                            img_content = f"\n\n<img src=\"{img_data['url']}\" alt=\"{img_alt}\" style=\"max-width: 100%; height: auto;\">\n\n"
+                # Sort insertion points
+                if insertion_points:
+                    insertion_points.sort()
+                    
+                    # Make sure we don't have more insertion points than images
+                    insertion_points = insertion_points[:len(image_data["images"])]
+                    
+                    # Insert images at the chosen points
+                    for i, insertion_idx in enumerate(insertion_points):
+                        if i < len(image_data["images"]):
+                            img_data = image_data["images"][i]
+                            img_alt = img_data["alt_text"] or "Image"
                             
-                        paragraphs.insert(insertion_idx + i, img_content)  # +i to account for shifting indices
-                
-                # Reconstruct the document
-                response = '\n\n'.join(paragraphs)
-                print(f"✅ Inserted {len(insertion_points)} images evenly throughout the document")
+                            if format == 'markdown':
+                                img_content = f"\n\n![{img_alt}]({img_data['url']})\n\n"
+                            else:  # HTML format
+                                img_content = f"\n\n<img src=\"{img_data['url']}\" alt=\"{img_alt}\" style=\"max-width: 100%; height: auto;\">\n\n"
+                                
+                            paragraphs.insert(insertion_idx + i, img_content)
+                    
+                    # Reconstruct the document
+                    response = '\n\n'.join(paragraphs)
             else:
-                # If no explicit placeholders found in the document, use AI-powered image placement
-                if all_image_indicators == 0:
-                    print("💡 Using AI-powered image placement to find optimal locations...")
-        else:
-            # Original approach - try to replace placeholders
-            for i, img_data in enumerate(image_data["images"]):
-                # 1-indexed for placeholders
-                img_idx = i + 1
-                print(f"🔄 Processing image {img_idx} of {len(image_data['images'])}")
+                # Handle explicit placeholders
+                console.print(f"🔄 Processing {placeholders_found} image placeholders...")
                 
+                # Replace placeholders with actual images
+                for i, img_data in enumerate(image_data["images"]):
+                    img_idx = i + 1
+                    if img_idx <= placeholders_found:
+                        placeholder = f"IMAGE_{img_idx}"
+                        if format == 'markdown':
+                            img_content = f"![{img_data['alt_text'] or 'Image'}]({img_data['url']})"
+                        else:  # HTML
+                            img_content = f"<img src=\"{img_data['url']}\" alt=\"{img_data['alt_text'] or 'Image'}\" style=\"max-width: 100%; height: auto;\">"
+                        
+                        response = response.replace(placeholder, img_content)
+            
+            # Add credits at the end of the document
+            if image_data["credits"]:
                 if format == 'markdown':
-                    # Check for simplified placeholder first - it's easier to handle
-                    simplified_placeholder = f"[INSERT_IMAGE_{img_idx}_HERE]"
-                    if simplified_placeholder in response:
-                        alt_text = img_data.get("alt_text") or "Image"
-                        proper_image = f"![{alt_text}]({img_data['url']})"
-                        print(f"✅ Replacing simplified placeholder '{simplified_placeholder}' with '{proper_image}'")
-                        response = response.replace(simplified_placeholder, proper_image)
-                        image_replaced = True
-                        continue
-                        
-                    # Try to find patterns with IMAGE placeholder in various formats
-                    img_placeholder_patterns = [
-                        r'!\[([^\]]+)\]\(IMAGE_{})'.format(img_idx),  # ![Alt text](IMAGE_n)
-                        r'!\[([^\]]+)\]!\[([^\]]+)\]\(/[^)]+\)'.format(img_idx),  # ![Alt]![Description](/path)
-                        r'!\[([^\]]+)\]IMAGE_{}'.format(img_idx),  # ![Alt]IMAGE_n
-                        r'!\[([^\]]+)\]\[IMAGE_{}\]'.format(img_idx),  # ![Alt][IMAGE_n]
-                        r'\(IMAGE_{}\)'.format(img_idx),  # (IMAGE_n)
-                        r'IMAGE_{}'.format(img_idx),  # IMAGE_n plain
-                        r'\[INSERT_IMAGE_{}_HERE\]'.format(img_idx)  # [INSERT_IMAGE_n_HERE]
-                    ]
-                    
-                    # First try these exact patterns
-                    image_replaced = False
-                    for pattern in img_placeholder_patterns:
-                        print(f"🔍 Looking for pattern: {pattern}")
-                        matches = list(re.finditer(pattern, response))
-                        print(f"   Found {len(matches)} matches for this pattern")
-                        
-                        for match in matches:
-                            image_replaced = True
-                            full_match = match.group(0)
-                            match_start = match.start()
-                            match_end = match.end()
-                            
-                            # Show context around the match for debugging
-                            context_start = max(0, match_start - 20)
-                            context_end = min(len(response), match_end + 20)
-                            context = response[context_start:context_end].replace('\n', '\\n')
-                            print(f"   Match context: ...{context}...")
-                            
-                            # Get the alt text if available, or use a default
-                            try:
-                                alt_text = match.group(1) if match.lastindex and match.lastindex >= 1 else "Image"
-                            except:
-                                alt_text = "Image"
-                                
-                            # Create proper markdown image
-                            proper_image = f"![{alt_text}]({img_data['url']})"
-                            print(f"✅ Replacing '{full_match}' with '{proper_image}'")
-                            response = response.replace(full_match, proper_image)
-                    
-                    # If no pattern matched, fall back to simple replacement
-                    if not image_replaced:
-                        print(f"⚠️ No complex patterns matched for image {img_idx}, trying simple replacements")
-                        
-                        # Check for the exact string first
-                        exact_placeholder = f"IMAGE_{img_idx}"
-                        if exact_placeholder in response:
-                            print(f"   Found exact string '{exact_placeholder}'")
-                            
-                            # Try to find more context
-                            for i in range(len(response) - len(exact_placeholder)):
-                                if response[i:i+len(exact_placeholder)] == exact_placeholder:
-                                    context_start = max(0, i - 30)
-                                    context_end = min(len(response), i + len(exact_placeholder) + 30)
-                                    context = response[context_start:context_end].replace('\n', '\\n')
-                                    print(f"   Context: ...{context}...")
-                    
-                        # Check for the exact placeholder strings
-                        placeholder_formats = [
-                            f"IMAGE_{img_idx}",
-                            f"[INSERT_IMAGE_{img_idx}_HERE]"
-                        ]
-                        
-                        img_replaced = False
-                        for placeholder in placeholder_formats:
-                            if placeholder in response:
-                                # Replace just the placeholder with the image URL
-                                if format == 'html':
-                                    # For HTML, replace with proper img tag
-                                    img_tag = f'<img src="{img_data["url"]}" alt="{img_data["alt_text"] or "Image"}" style="max-width: 100%; height: auto;">'
-                                    print(f"Replacing {placeholder} with HTML image tag")
-                                    response = response.replace(placeholder, img_tag)
-                                else:
-                                    # For markdown, replace with proper markdown image
-                                    md_img = f"![{img_data['alt_text'] or 'Image'}]({img_data['url']})"
-                                    print(f"Replacing {placeholder} with {md_img}")
-                                    response = response.replace(placeholder, md_img)
-                                img_replaced = True
-                                break
-                        
-                        # If no simple placeholder was found, try the more complex patterns
-                        if not img_replaced:
-                            # Try to find <img src="IMAGE_n" patterns (original method)
-                            img_html_pattern = r'<img[^>]*src=["\'](IMAGE_{})["\'][^>]*>'.format(img_idx)
-                            matches = re.finditer(img_html_pattern, response)
-                            matches_list = list(matches)
-                            
-                            if matches_list:
-                                for match in matches_list:
-                                    img_replaced = True
-                                    full_match = match.group(0)
-                                    # Replace just the src attribute
-                                    new_img_tag = full_match.replace(f'src="{primary_placeholder}"', f'src="{img_data["url"]}"')
-                                    response = response.replace(full_match, new_img_tag)
-                                    print(f"Replaced HTML img tag: {full_match} with {new_img_tag}")
-                
-                elif format == 'html':
-                    # Format for HTML
-                    img_tag = format_image_for_html(
-                        img_data["url"], 
-                        img_data["alt_text"], 
-                        img_data["width"]
-                    )
-                    
-                    # Check for simplified placeholders first
-                    simplified_placeholder = f"[INSERT_IMAGE_{img_idx}_HERE]"
-                    if simplified_placeholder in response:
-                        print(f"Replacing simplified placeholder {simplified_placeholder} with HTML image")
-                        response = response.replace(simplified_placeholder, img_tag)
-                        continue
-                    
-                    # Primary placeholder format: src="IMAGE_{n}"
-                    primary_placeholder = f"IMAGE_{img_idx}"
-                    if primary_placeholder in response:
-                        print(f"Replacing {primary_placeholder} with {img_data['url']}")
-                        response = response.replace(primary_placeholder, img_data["url"])
-                    else:
-                        # Try to find <img src="IMAGE_n" patterns
-                        img_html_pattern = r'<img[^>]*src=["\'](IMAGE_{})["\'][^>]*>'.format(img_idx)
-                        matches = re.finditer(img_html_pattern, response)
-                        img_replaced = False
-                        for match in matches:
-                            img_replaced = True
-                            full_match = match.group(0)
-                            # Replace just the src attribute
-                            new_img_tag = full_match.replace(f'src="{primary_placeholder}"', f'src="{img_data["url"]}"')
-                            response = response.replace(full_match, new_img_tag)
-                            print(f"Replaced HTML img tag: {full_match} with {new_img_tag}")
-                        
-                        if not img_replaced:
-                            print(f"Cannot find {primary_placeholder} in HTML, trying simple replacement")
-                            # Just create a simple image tag and insert it at a strategic location
-                            
-                            # Look for headings to insert after
-                            h_tags = re.finditer(r'<h[1-6][^>]*>.*?</h[1-6]>', response, re.DOTALL)
-                            h_positions = [m.end() for m in h_tags]
-                            
-                            if h_positions and len(h_positions) >= img_idx:
-                                # Insert after a heading
-                                pos = h_positions[min(img_idx, len(h_positions) - 1)]
-                                img_tag = f'<img src="{img_data["url"]}" alt="{img_data["alt_text"] or "Image"}" style="max-width: 100%; height: auto;">'
-                                response = response[:pos] + "\n" + img_tag + "\n" + response[pos:]
-                                print(f"Inserted image tag after heading at position {pos}")
-                                img_replaced = True
-                            elif len(response) > 0:
-                                # If no headings found, insert after the first paragraph or at 1/3 of the document
-                                p_tags = re.finditer(r'<p[^>]*>.*?</p>', response, re.DOTALL)
-                                p_positions = [m.end() for m in p_tags]
-                                
-                                if p_positions and len(p_positions) >= img_idx:
-                                    # Insert after a paragraph
-                                    pos = p_positions[min(img_idx, len(p_positions) - 1)]
-                                else:
-                                    # Insert at roughly 1/3 of the document for first image, 2/3 for second, etc.
-                                    pos = min(int(len(response) * img_idx / (len(image_data["images"]) + 1)), len(response) - 1)
-                                    
-                                img_tag = f'<img src="{img_data["url"]}" alt="{img_data["alt_text"] or "Image"}" style="max-width: 100%; height: auto;">'
-                                response = response[:pos] + "\n" + img_tag + "\n" + response[pos:]
-                                print(f"Inserted image tag at position {pos}")
-                                img_replaced = True
-                
-                # Add credits at the end of the document
-                if image_data["credits"]:
-                    if format == 'markdown':
-                        response += "\n\n---\n\n## Image Credits\n\n"
-                        for credit in image_data["credits"]:
-                            response += f"* {credit}\n"
-                    else:
-                        response += "\n\n<hr>\n<h2>Image Credits</h2>\n<ul>\n"
-                        for credit in image_data["credits"]:
-                            response += f"<li>{credit}</li>\n"
-                        response += "</ul>\n"
+                    response += "\n\n---\n\n## Image Credits\n\n"
+                    for credit in image_data["credits"]:
+                        response += f"* {credit}\n"
+                else:  # HTML
+                    response += "\n\n<hr>\n<h2>Image Credits</h2>\n<ul>\n"
+                    for credit in image_data["credits"]:
+                        response += f"<li>{credit}</li>\n"
+                    response += "</ul>\n"
         
         # Determine what to do with the response based on write flag
         if write:
