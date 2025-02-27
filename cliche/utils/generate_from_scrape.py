@@ -403,7 +403,7 @@ def generate(topic: str, format: str, path: Optional[str], raw: bool = False,
             if not photos:
                 console.print("❌ No images found for this search term.")
             else:
-                # Download each image
+                # Process each image
                 for i, photo in enumerate(photos[:image_count]):
                     photo_id = photo.get('id')
                     console.print(f"🖼️ Getting image {i+1}/{min(image_count, len(photos))}...")
@@ -460,7 +460,7 @@ def generate(topic: str, format: str, path: Optional[str], raw: bool = False,
             # Process the generated content to replace image placeholders with actual images
             if format == 'markdown' or format == 'html':
                 if image_data["images"]:
-                    print(f"Processing {len(image_data['images'])} images for document")
+                    console.print(f"🖼️ Processing {len(image_data['images'])} images for document with AI-powered placement...")
                     generated_content = process_images_in_content(generated_content, format, image_data)
             
             # Add HTML wrapper if needed
@@ -948,23 +948,6 @@ For code blocks, follow these strict formatting rules:
 5. ALWAYS close code blocks before starting new paragraphs or sections
 6. When showing examples with code, ALWAYS close the code block before continuing with explanations
 
-Here's an example of properly formatted code blocks:
-
-```python
-# Example Python code
-x = 42
-print(f"The value is: {{x}}")
-```
-
-This text appears after the code block and is separate from it.
-
-```java
-// Example Java code
-System.out.println("Another language example");
-```
-
-EXTREMELY IMPORTANT: When showing examples, don't write phrases like "For example:" and then start a code block without closing it. Always close all code blocks even when explaining examples.
-
 EXTREMELY IMPORTANT: Do NOT include ```markdown or ```anything at the beginning of the document. 
 EXTREMELY IMPORTANT: Do NOT include ``` at the end of the document.
 EXTREMELY IMPORTANT: Only use triple backticks for actual code blocks within the document."""
@@ -1107,10 +1090,6 @@ SECTION CONTENT:
     # Add each processed section
     for section_title, section_content in processed_sections.items():
         document += section_content + "\n\n"
-    
-    # Add image placeholders
-    if image_data["images"] and (format == 'markdown' or format == 'html'):
-        document = add_image_placeholders(document, format, len(image_data["images"]))
     
     # Add conclusion
     conclusion_template = f"""
@@ -1352,82 +1331,13 @@ def extract_major_sections(scraped_data):
     return sections
 
 def add_image_instructions(image_data):
-    """Add instructions for image placeholders."""
+    """Add instructions for image placement."""
+    # Simplified to remove extensive placeholder instructions
     return f"""
 
-=== EXTREMELY IMPORTANT IMAGE INSTRUCTIONS - YOU MUST FOLLOW THESE EXACTLY ===
-
-YOU MUST include exactly {len(image_data['images'])} image placeholders in your response.
-This is REQUIRED and your response will be rejected if you don't include these placeholders.
-
-NEVER USE ```markdown or any code fences around your entire response.
-
-Placeholder format:
-- For markdown: ![Brief description related to that section](IMAGE_1), ![Another description](IMAGE_2), etc.
-- For HTML: <img src="IMAGE_1" alt="Brief description related to that section">, etc.
-- Place these at logical places throughout the document where images would enhance understanding
-- Distribute them evenly throughout different sections
-- DO NOT cluster them all at the beginning or end
-
-EXAMPLE of correct image placement in markdown:
-
-# Topic Title
-
-Introduction paragraph here...
-
-![Visual representation of the topic concept](IMAGE_1)
-
-## First Section
-Content here...
-
-## Second Section
-Content here...
-
-![Diagram showing the process](IMAGE_2)
-
-Remember: You MUST include ALL {len(image_data['images'])} image placeholders exactly as shown above.
+IMPORTANT: Do NOT start your response with ```markdown or any code fences. 
+Do NOT enclose your entire response in code fences.
 """
-
-def add_image_placeholders(content, format, image_count):
-    """Add image placeholders at strategic locations in the document."""
-    if image_count <= 0:
-        return content
-    
-    lines = content.split('\n')
-    result = []
-    
-    # Find good places to insert images (after headings or intro paragraphs)
-    image_index = 1
-    intro_done = False
-    
-    for i, line in enumerate(lines):
-        result.append(line)
-        
-        # Add image after first paragraph
-        if not intro_done and i > 5 and line.strip() == "" and image_index <= image_count:
-            if format == 'markdown':
-                result.append(f"![Image related to {lines[0].strip('# ')}](IMAGE_{image_index})")
-            else:  # HTML
-                result.append(f'<img src="IMAGE_{image_index}" alt="Image related to {lines[0].strip("# ")}">')
-            image_index += 1
-            intro_done = True
-        
-        # Add images after major section headings
-        elif line.startswith('## ') and i < len(lines) - 1 and image_index <= image_count:
-            # Add the next line
-            result.append(lines[i+1])
-            
-            # Add an image after the first paragraph
-            if format == 'markdown':
-                result.append(f"![Image related to {line.strip('# ')}](IMAGE_{image_index})")
-            else:  # HTML
-                result.append(f'<img src="IMAGE_{image_index}" alt="Image related to {line.strip("# ")}">')
-            image_index += 1
-            
-            # Skip the next line since we already added it
-            i += 1
-    
-    return '\n'.join(result)
 
 async def get_image_placement_suggestions(llm, document_content, image_count, topic, format):
     """Ask the LLM to suggest optimal image placement locations in the document.
