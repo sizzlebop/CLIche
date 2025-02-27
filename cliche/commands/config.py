@@ -3,6 +3,7 @@ Configuration management commands
 """
 import click
 import asyncio
+import os
 from typing import Optional
 from ..core import Config, LLMProvider, CLIche
 
@@ -10,14 +11,49 @@ from ..core import Config, LLMProvider, CLIche
 @click.option('--provider', type=click.Choice([p.value for p in LLMProvider]), help='Set active LLM provider')
 @click.option('--api-key', help='API key for the provider')
 @click.option('--model', help='Model to use')
-def config(provider: Optional[str], api_key: Optional[str], model: Optional[str]):
+@click.option('--unsplash-key', help='API key for Unsplash image service')
+@click.option('--brave-key', help='API key for Brave Search service')
+def config(provider: Optional[str], api_key: Optional[str], model: Optional[str], 
+           unsplash_key: Optional[str], brave_key: Optional[str]):
     """Configure CLIche settings"""
     config = Config()
     
-    # Handle all updates at once
+    # Handle Unsplash API key
+    if unsplash_key:
+        # Set Unsplash API key in config
+        if 'services' not in config.config:
+            config.config['services'] = {}
+        if 'unsplash' not in config.config['services']:
+            config.config['services']['unsplash'] = {}
+        
+        config.config['services']['unsplash']['api_key'] = unsplash_key
+        
+        # Also set in environment for current session
+        os.environ['UNSPLASH_API_KEY'] = unsplash_key
+        click.echo("🖼️ Unsplash API key configured successfully.")
+    
+    # Handle Brave Search API key
+    if brave_key:
+        # Set Brave Search API key in config
+        if 'services' not in config.config:
+            config.config['services'] = {}
+        if 'brave_search' not in config.config['services']:
+            config.config['services']['brave_search'] = {}
+        
+        config.config['services']['brave_search']['api_key'] = brave_key
+        
+        # Also set in environment for current session
+        os.environ['BRAVE_SEARCH_API_KEY'] = brave_key
+        click.echo("🔍 Brave Search API key configured successfully.")
+    
+    # Handle provider updates
     if provider:
         config.config['provider'] = provider
         
+        # Initialize provider config if it doesn't exist
+        if provider not in config.config['providers']:
+            config.config['providers'][provider] = {}
+            
         # Update model if provided
         if model:
             config.config['providers'][provider]['model'] = model

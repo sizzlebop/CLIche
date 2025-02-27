@@ -5,6 +5,7 @@ from .ansi import ansi
 from .art import art
 from .ask import ask
 from .code import code
+from .image import image
 from .process import kill
 from .roast import roastme
 from .scrape import scrape
@@ -20,6 +21,7 @@ __all__ = [
     'art',
     'ask',
     'code',
+    'image',
     'kill',
     'roastme',
     'scrape',

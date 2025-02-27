@@ -26,7 +26,8 @@ setup(
         'duckduckgo-search>=2.8.6',
         'rich>=13.0.0',
         'art>=6.0',
-        'pydantic>=2.0.0'
+        'pydantic>=2.0.0',
+        'python-unsplash>=1.1.0'
     ],
     entry_points={
         'console_scripts': [

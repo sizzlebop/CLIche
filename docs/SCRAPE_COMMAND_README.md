@@ -240,19 +240,34 @@ cliche generate "Python async" --format markdown --image "python coding" --image
 
 ### Image Integration with Direct URLs
 
-When using the `--image` option with the `generate` command, CLIche now embeds images with direct URLs from Unsplash instead of downloading them locally. This offers several advantages:
+When using the `--image` option with the `generate` command, CLIche embeds images with direct URLs from Unsplash instead of downloading them locally. This offers several advantages:
 
 1. **Better compatibility** - Works with all markdown viewers and platforms
 2. **Improved sharing** - Documents can be shared without needing to include image files
 3. **Standard compliance** - Uses standard markdown image syntax
 
-Example of using images with direct URLs:
+### AI-Powered Contextual Image Placement
+
+The `generate` command now features intelligent image placement powered by AI:
+
+- **Content Analysis**: The AI analyzes your document content to understand the topics, concepts, and structure
+- **Contextual Placement**: Images are automatically placed at positions where they best enhance understanding
+- **Smart Fallbacks**: If optimal positions can't be determined, images are evenly distributed at logical points
+
+This feature works automatically when adding images to generated documents without requiring manual image placeholders. The system will:
+
+1. Analyze the document content to identify key concepts and section transitions
+2. Determine optimal placement points based on content relevance
+3. Insert images at these contextually appropriate positions
+4. Add proper attribution for all images as required by Unsplash
+
+Example of using AI-powered image placement with generate command:
 
 ```bash
-cliche generate "Machine Learning" --image "neural networks" --image-count 4
+cliche generate "Machine Learning" --format markdown --image "neural networks" --image-count 3
 ```
 
-This will create a document with four images about neural networks embedded with direct Unsplash URLs, properly attributed in the document.
+This will create a document about machine learning with three neural network images intelligently placed at contextually relevant positions throughout the document.
 
 ## Troubleshooting
 

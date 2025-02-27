@@ -295,7 +295,18 @@ def write(prompt: str, type: str, lang: Optional[str], path: Optional[str],
                 else:
                     gen_prompt = f"Generate {language} code for: {prompt}. Include all necessary imports and dependencies."
             elif type == 'html':
-                gen_prompt = f"Generate a complete, modern HTML page with CSS and JavaScript for: {prompt}"
+                gen_prompt = f"""Generate a complete, modern HTML page with CSS and JavaScript for: {prompt}
+
+IMPORTANT: Use proper HTML structure and tags - NOT Markdown syntax.
+- Use <h1>, <h2>, <h3> tags for headings (NOT # or ## Markdown style headings)
+- Use <p> tags for paragraphs
+- Use <ul> and <li> tags for lists (NOT - or * Markdown style lists)
+- Use <code> and <pre> tags for code blocks (NOT ``` Markdown style code blocks)
+- Use <strong> and <em> for emphasis (NOT ** or * Markdown style)
+- Use <a href="..."> for links (NOT [text](url) Markdown style)
+- Use <blockquote> for quotes (NOT > Markdown style)
+
+The generated response should be a complete, valid HTML document with DOCTYPE, html, head, and body tags."""
             else:
                 gen_prompt = f"Generate {type} content for: {prompt}"
                 

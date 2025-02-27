@@ -2,6 +2,16 @@
 
 All notable changes to the CLIche project will be documented in this file.
 
+## [1.3.4] - 2024-08-02
+
+### Enhanced
+- 🖼️ Added AI-powered contextual image placement across all document commands
+  - Implemented LLM-based analysis to find optimal image placement points
+  - Enhanced image handling in research, generate, and write commands
+  - Images now placed at contextually relevant positions in the document
+  - Added fallback to evenly distributed placement when LLM suggestions unavailable
+  - Replaced confusing error messages with more user-friendly notifications
+
 ## [1.3.3] - 2024-08-01
 
 ### Fixed

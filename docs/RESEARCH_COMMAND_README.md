@@ -45,6 +45,7 @@ cliche research "Your query here" [OPTIONS]
 | `--image-width INTEGER` | Width of images in pixels (default: 800) |
 | `--debug` | Enable debug mode for verbose output |
 | `--help` | Show help message |
+| `--search-engine [auto\|duckduckgo\|brave]` | Search engine to use (default: auto) |
 
 ## Examples
 
@@ -113,7 +114,8 @@ cliche research "Remote work productivity" --professional --write --format markd
 The research command follows these steps:
 
 1. **Search Phase**: 
-   - Uses DuckDuckGo to find relevant sources for your query
+   - Uses DuckDuckGo or Brave Search to find relevant sources for your query
+   - Automatically falls back to alternative search engines if primary search fails
    - Ranks results by relevance and recency
 
 2. **Content Extraction Phase**:
@@ -133,7 +135,7 @@ The research command follows these steps:
 
 ## Document Generation Modes
 
-When using the `--write` flag to generate a document, the research command leverages CLIche's advanced document generation capabilities:
+When using the `--write` flag to generate a document, the research command offers three different modes:
 
 ### Comprehensive Documents (Default)
 
@@ -155,9 +157,34 @@ Example:
 cliche research "Python asyncio programming" --write --format markdown
 ```
 
-### Adding a Future Feature: Summary Mode
+### Summary Mode
 
-In an upcoming release, the research command will also support a `--summarize` flag (similar to the `generate` command) that will create more concise document summaries. This feature is currently in development.
+Use the `--summarize` flag to create a more concise document that focuses on the key information:
+
+```bash
+cliche research "Python asyncio programming" --write --format markdown --summarize
+```
+
+This mode:
+- Creates a shorter, more focused document (around 800-1000 words)
+- Preserves the most important information and key concepts
+- Skips deep technical details while maintaining the overall structure
+- Processes all content in a single pass (no chunking needed)
+- Is ideal for readers who need a good overview without all the details
+
+### Snippet Mode
+
+Use the `--snippet` flag to generate a very brief overview of the topic:
+
+```bash
+cliche research "Python asyncio programming" --snippet
+```
+
+This mode:
+- Creates a very brief summary (2-3 paragraphs, under 300 words)
+- Includes only the most essential definition and key points
+- Perfect for quick previews, executive summaries, or social media posts
+- Can be used with or without the `--write` flag
 
 ## Image Integration with Direct URLs
 
@@ -167,15 +194,28 @@ When using the `--image` option with the `research` command, CLIche now embeds i
 2. **Improved sharing** - Research documents can be shared without needing to include image files
 3. **Standard compliance** - Uses standard markdown image syntax
 
-The images are automatically placed at strategic locations within your research document (after introduction and major sections) to enhance the visual appeal and information value.
+### AI-Powered Contextual Image Placement
 
-Example of using images with direct URLs in research:
+CLIche now features intelligent image placement powered by AI:
+
+- **Content Analysis**: The AI analyzes your research document content to understand the topics, concepts, and structure
+- **Contextual Placement**: Images are automatically placed at positions where they best enhance understanding
+- **Smart Fallbacks**: If optimal positions can't be determined, images are evenly distributed at logical points
+
+This feature works automatically when adding images to research documents without requiring manual image placeholders. The system will:
+
+1. Analyze the document content to identify key concepts and section transitions
+2. Determine optimal placement points based on content relevance
+3. Insert images at these contextually appropriate positions
+4. Add proper attribution for all images as required by Unsplash
+
+Example of using AI-powered image placement in research:
 
 ```bash
 cliche research "Renewable energy trends" --write --image "solar energy" --image-count 3
 ```
 
-This will create a research document about renewable energy trends with three solar energy images embedded with direct Unsplash URLs, properly attributed in the document.
+This will create a research document about renewable energy trends with three solar energy images intelligently placed at contextually relevant positions throughout the document.
 
 ## Automatic Unique File Naming
 
@@ -221,11 +261,16 @@ cliche research "Benefits of exercise" --professional
    - Some websites block web crawlers. Try increasing the `--depth` to find alternative sources.
    - Example: `cliche research "Your query" --depth 5`
 
-2. **Slow Response Times**:
+2. **Search Engine Rate Limits**:
+   - DuckDuckGo may occasionally impose rate limits
+   - Try using Brave Search as an alternative: `cliche research "Your query" --search-engine brave`
+   - Or configure both and let CLIche automatically select available engines: `cliche research "Your query" --search-engine auto`
+
+3. **Slow Response Times**:
    - Research with high depth values will take longer. Consider reducing depth for faster results.
    - Example: `cliche research "Quick answer needed" --depth 1`
 
-3. **Content Quality Issues**:
+4. **Content Quality Issues**:
    - If results are poor, try refining your query to be more specific
    - Example: `cliche research "Specific React hook usage examples"`
 
@@ -244,6 +289,38 @@ This will show:
 - Token usage and processing details
 
 ## Advanced Usage
+
+### Multiple Search Engine Support
+
+CLIche now supports both DuckDuckGo and Brave Search for the research command:
+
+1. **Using DuckDuckGo (default):**
+   ```bash
+   cliche research "Your query" --search-engine duckduckgo
+   ```
+
+2. **Using Brave Search:**
+   ```bash
+   cliche research "Your query" --search-engine brave
+   ```
+
+3. **Automatic mode (tries all available engines):**
+   ```bash
+   cliche research "Your query" --search-engine auto
+   ```
+
+#### Configuring Brave Search
+
+To use Brave Search, you need to obtain an API key from Brave:
+
+1. Go to https://brave.com/search/api/
+2. Register for a Brave Search API key
+3. Configure CLIche to use your API key:
+   ```bash
+   cliche config --brave-key "your-api-key-here"
+   ```
+
+Once configured, you can use Brave Search as either a primary or fallback search provider.
 
 ### Combining with Other Commands
 

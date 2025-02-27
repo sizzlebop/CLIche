@@ -14,6 +14,8 @@
 
 ## Latest Features
 
+- 🤖 **AI-Powered Image Placement**: Intelligent contextual placement of images in documents based on content analysis
+- 🔍 **Multiple Search Engines**: Added Brave Search integration alongside DuckDuckGo for more reliable web research
 - 📂 **Automatic Unique File Naming**: Generate multiple documents on the same topic without overwriting previous files
 - 🖼️ **Direct Image URLs**: Unsplash images are now embedded with direct URLs for better sharing and compatibility
 - 📚 **Advanced Document Generation**: Intelligent chunking for comprehensive documents with the option for concise summaries
@@ -217,7 +219,18 @@ cliche research "Space exploration milestones" --write --format markdown
 
 # Generate a document with images
 cliche research "Marine biology" --write --format markdown --image "ocean life" --image-count 4
+
+# Generate a concise summary document
+cliche research "Artificial intelligence trends" --write --summarize
+
+# Generate a very brief snippet (2-3 paragraphs)
+cliche research "Climate change effects" --snippet
 ```
+
+The `research` command offers three different document modes:
+- **Comprehensive** (default): Detailed, in-depth documents with full technical detail
+- **Summary** (`--summarize`): More concise documents focusing on key information (~800-1000 words)
+- **Snippet** (`--snippet`): Very brief overviews for quick consumption (2-3 paragraphs)
 
 See [RESEARCH_COMMAND_README.md](RESEARCH_COMMAND_README.md) for more details.
 
@@ -247,7 +260,37 @@ The `generate` command uses an advanced chunking approach that:
 
 See [SCRAPE_COMMAND_README.md](SCRAPE_COMMAND_README.md) for more details.
 
-## Image Integration
+## Image Integration with Direct URLs
+
+When using the `--image` option with commands like `research`, `generate`, or `write`, CLIche embeds images with direct URLs from Unsplash instead of downloading them locally. This offers several advantages:
+
+1. **Better compatibility** - Works with all markdown viewers and platforms
+2. **Improved sharing** - Documents can be shared without needing to include image files
+3. **Standard compliance** - Uses standard markdown image syntax
+
+### AI-Powered Image Placement
+
+CLIche now uses advanced AI to intelligently place images at contextually relevant positions in your documents:
+
+1. **Content Analysis** - The AI analyzes your document content to understand the topics and concepts
+2. **Optimal Positioning** - Images are placed at locations where they best enhance understanding
+3. **Natural Integration** - No more arbitrary image placement or manual placeholders required
+
+When no explicit image placeholders are found, the system automatically:
+- Analyzes document content and structure
+- Identifies key sections and concepts
+- Places images at points that complement the surrounding text
+- Evenly distributes images if optimal positions can't be determined
+
+Example of using AI-powered image placement:
+
+```bash
+cliche write "A guide to Mediterranean cuisine" --format markdown --image "mediterranean food" --image-count 3
+```
+
+This will create a document with three Mediterranean food images intelligently placed throughout the content at contextually relevant positions.
+
+### Image Command for Direct Searches
 
 The `image` command lets you search and download high-quality images from Unsplash:
 
@@ -282,6 +325,7 @@ All images in documents:
 - Use direct Unsplash URLs for better compatibility and sharing
 - Are automatically attributed as required by Unsplash terms
 - Are properly formatted for the document type (markdown or HTML)
+- Are intelligently placed using AI-powered contextual analysis
 
 The `image` command still supports downloading images locally to `~/.cliche/files/images/` for other uses.
 

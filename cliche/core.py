@@ -21,6 +21,7 @@ class Config:
         self.config_dir = Path.home() / ".config" / "cliche"
         self.config_file = self.config_dir / "config.json"
         self.config = self._load_config()
+        self._load_services_env()
 
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from file."""
@@ -35,6 +36,9 @@ class Config:
                     "ollama": {"model": "phi4"},
                     "deepseek": {"api_key": "", "model": "deepseek-chat"},
                     "openrouter": {"api_key": "", "model": "gpt-4-turbo-preview"}
+                },
+                "services": {
+                    "unsplash": {"api_key": ""}
                 }
             }
             self.save_config(default_config)
@@ -45,18 +49,31 @@ class Config:
                 return json.load(f)
         except json.JSONDecodeError:
             click.echo("Error reading config file. Using defaults.")
-            return {"provider": "openai", "providers": {}}
+            return {"provider": "openai", "providers": {}, "services": {}}
+
+    def _load_services_env(self) -> None:
+        """Load service API keys into environment variables."""
+        # Load Unsplash API key if configured
+        if 'services' in self.config and 'unsplash' in self.config['services']:
+            unsplash_key = self.config['services']['unsplash'].get('api_key')
+            if unsplash_key:
+                os.environ['UNSPLASH_API_KEY'] = unsplash_key
 
     def save_config(self, config: Dict[str, Any]) -> None:
         """Save configuration to file."""
+        # Create config directory if it doesn't exist
         self.config_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Write config file
         with open(self.config_file, "w") as f:
-            json.dump(config, f, indent=2)
+            json.dump(config, f, indent=4)
+        
+        self.config = config
+        # Reload service API keys
+        self._load_services_env()
 
     def get_provider_config(self, provider_name: str) -> Dict[str, Any]:
         """Get configuration for a specific provider."""
-        if not provider_name:
-            return {}
         return self.config.get("providers", {}).get(provider_name, {})
 
 class LLMProvider(str, Enum):

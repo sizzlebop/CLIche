@@ -5,6 +5,7 @@ from .ansi import ansi
 from .art import art
 from .ask import ask
 from .code import code
+from .image import image
 from .process import kill
 from .roast import roastme
 from .scrape import scrape
@@ -26,6 +27,7 @@ def register_commands(cli):
     cli.add_command(ask)
     cli.add_command(code)
     cli.add_command(config)
+    cli.add_command(image)
     cli.add_command(kill)
     cli.add_command(models)
     cli.add_command(roastme)

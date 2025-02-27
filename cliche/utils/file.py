@@ -15,13 +15,24 @@ def get_file_size_str(size: int) -> str:
     else:
         return f"{size/1024/1024:.1f}MB"
 
-def get_output_dir(type: Literal['code', 'write', 'scrape']) -> Path:
-    """Get the output directory for generated files."""
+def get_output_dir(type: Literal['code', 'write', 'scrape', 'docs']) -> Path:
+    """Get the output directory for generated files.
+    
+    Args:
+        type: The type of content, which determines the directory.
+            - 'code': Code files
+            - 'write': Text files from the write command
+            - 'scrape': Raw scraped content
+            - 'docs': Generated documents, with optional subdirectory
+            
+    Returns:
+        Path object for the output directory
+    """
     # Get user's home directory
     home = Path.home()
     
-    # Create base .cliche directory if it doesn't exist
-    cliche_dir = home / '.cliche'
+    # Create base cliche directory if it doesn't exist (removing the dot to make it visible)
+    cliche_dir = home / 'cliche'
     cliche_dir.mkdir(exist_ok=True)
     
     # Create files directory if it doesn't exist
@@ -33,6 +44,29 @@ def get_output_dir(type: Literal['code', 'write', 'scrape']) -> Path:
     output_dir.mkdir(exist_ok=True)
     
     return output_dir
+
+def get_docs_dir(source: Optional[Literal['write', 'research', 'scrape']] = None) -> Path:
+    """Get the output directory for documents with optional source-specific subdirectory.
+    
+    Args:
+        source: Optional source of the document:
+            - 'write': Documents generated via the write command
+            - 'research': Documents generated via research --write
+            - 'scrape': Documents generated from scraped content
+            
+    Returns:
+        Path object for the docs directory or subdirectory
+    """
+    # First get the base docs directory
+    docs_dir = get_output_dir('docs')
+    
+    # If a source is specified, get/create the subdirectory
+    if source:
+        subdir = docs_dir / source
+        subdir.mkdir(exist_ok=True)
+        return subdir
+    
+    return docs_dir
 
 def save_code_to_file(content: str, path: str) -> None:
     """Save code content to a file."""
@@ -129,3 +163,35 @@ def extract_code_blocks(text: str, lang: Optional[str] = None) -> List[str]:
     
     # Clean and return the blocks
     return [block.strip() for block in blocks]
+
+def get_unique_filename(directory: Path, base_filename: str) -> str:
+    """Ensure a filename is unique by adding an incrementing number if needed.
+    
+    Args:
+        directory: Directory where the file will be saved
+        base_filename: The initial filename without uniqueness checks
+        
+    Returns:
+        A unique filename that doesn't exist in the directory
+    """
+    # If file doesn't exist, return the base filename
+    file_path = directory / base_filename
+    if not file_path.exists():
+        return base_filename
+    
+    # If file exists, try adding numerical suffixes until we find an unused name
+    # First, separate filename and extension
+    if '.' in base_filename:
+        name, ext = base_filename.rsplit('.', 1)
+        ext = '.' + ext
+    else:
+        name, ext = base_filename, ''
+    
+    # Try adding incremental numbers
+    counter = 1
+    while True:
+        new_filename = f"{name}_{counter}{ext}"
+        file_path = directory / new_filename
+        if not file_path.exists():
+            return new_filename
+        counter += 1

@@ -303,14 +303,14 @@ async def extract_content_with_crawler(crawler, url, config, debug=False):
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as response:
                     html = await response.text()
-                    if debug:
-                        click.echo(f"  Fetched {len(html)} bytes of HTML")
-                    
-                    if debug:
-                        click.echo("  Trying crawler.aprocess_html() method")
-                    content = await crawler.aprocess_html(html, url, config)
-                    if debug:
-                        click.echo(f"  aprocess_html() returned type: {type(content)}")
+            if debug:
+                click.echo(f"  Fetched {len(html)} bytes of HTML")
+    
+            if debug:
+                click.echo("  Trying crawler.aprocess_html() method")
+            content = await crawler.aprocess_html(html, url, config)
+            if debug:
+                click.echo(f"  aprocess_html() returned type: {type(content)}")
         except Exception as e:
             if debug:
                 click.echo(f"  aprocess_html() method failed: {str(e)}")
@@ -322,7 +322,7 @@ async def extract_content_with_crawler(crawler, url, config, debug=False):
             if hasattr(content, attr):
                 text_value = getattr(content, attr)
                 if text_value and isinstance(text_value, str) and len(text_value) > 100:
-                    extracted_text = text_value[:8000]  # Limit content size
+                    extracted_text = text_value[:20000]  # Limit content size
                     if debug:
                         click.echo(f"  Found text in content.{attr}: {len(extracted_text)} chars")
                     break
@@ -332,9 +332,9 @@ async def extract_content_with_crawler(crawler, url, config, debug=False):
         try:
             if len(content) > 100:
                 if '<html' in content.lower():
-                    extracted_text = extract_text_from_html(content)[:8000]
+                    extracted_text = extract_text_from_html(content)[:20000]
                 else:
-                    extracted_text = content[:8000]  # Use directly if it's already plain text
+                    extracted_text = content[:20000]  # Use directly if it's already plain text
                 if debug:
                     click.echo(f"  Extracted {len(extracted_text)} chars from content string")
         except Exception as e:
@@ -345,7 +345,7 @@ async def extract_content_with_crawler(crawler, url, config, debug=False):
     if extracted_text is None and content is not None and isinstance(content, dict):
         for key in ['content', 'text', 'body', 'main', 'article']:
             if key in content and isinstance(content[key], str) and len(content[key]) > 100:
-                extracted_text = content[key][:8000]
+                extracted_text = content[key][:20000]
                 if debug:
                     click.echo(f"  Found text in content['{key}']: {len(extracted_text)} chars")
                 break
@@ -366,8 +366,10 @@ async def extract_content_with_crawler(crawler, url, config, debug=False):
 @click.option("--image-width", default=800, help='Width of images', type=int)
 @click.option("--search-engine", type=click.Choice(['auto', 'duckduckgo', 'brave']), default='auto',
               help='Search engine to use (auto tries all available)')
+@click.option("--summarize", is_flag=True, help="Generate a concise summary document instead of a comprehensive one")
+@click.option("--snippet", is_flag=True, help="Generate a very brief snippet/overview (few paragraphs)")
 def research(query, depth, debug, fallback_only, write, format, filename, 
-             image, image_count, image_width, search_engine):
+             image, image_count, image_width, search_engine, summarize, snippet):
     """Research a topic online and generate a response or document.
     
     Research uses web search and content extraction to provide up-to-date information
@@ -379,6 +381,8 @@ def research(query, depth, debug, fallback_only, write, format, filename,
       cliche research "Python async programming best practices" -d 5
       cliche research "Climate change impacts" --write --format markdown
       cliche research "Mars exploration" -w -f markdown --image "mars rover" --image-count 2
+      cliche research "Artificial intelligence" --write --summarize
+      cliche research "Quantum physics" --snippet
     """
     
     # Join query parts
@@ -509,7 +513,7 @@ def research(query, depth, debug, fallback_only, write, format, filename,
                                 fallback_content = await fallback_scrape(url, debug)
                                 
                                 if fallback_content and len(fallback_content) > 100:
-                                    extracted_text = fallback_content[:8000]  # Increased content size limit
+                                    extracted_text = fallback_content[:20000]  # Increased content size limit
                                     extracted_data.append({
                                         "title": title,
                                         "url": url,
@@ -517,19 +521,6 @@ def research(query, depth, debug, fallback_only, write, format, filename,
                                         "snippet": result.get('snippet', '')
                                     })
                                     console.print(f"✅ Extraction succeeded: {len(extracted_text)} chars")
-                                else:
-                                    # Try alternate extraction method
-                                    fallback_content = await fallback_scrape(url, debug)
-                                    
-                                    if fallback_content and len(fallback_content) > 100:
-                                        extracted_text = fallback_content[:8000]  # Increased content size limit
-                                        extracted_data.append({
-                                            "title": title,
-                                            "url": url,
-                                            "content": extracted_text,
-                                            "snippet": result.get('snippet', '')
-                                        })
-                                        console.print(f"✅ Extraction succeeded: {len(extracted_text)} chars")
                         except Exception as e:
                             error_msg = f"❌ Error scraping {url}: {str(e)}"
                             if debug:
@@ -543,7 +534,7 @@ def research(query, depth, debug, fallback_only, write, format, filename,
                                 fallback_content = await fallback_scrape(url, debug)
                                 
                                 if fallback_content and len(fallback_content) > 100:
-                                    extracted_text = fallback_content[:8000]  # Increased content size limit
+                                    extracted_text = fallback_content[:20000]  # Increased content size limit
                                     extracted_data.append({
                                         "title": title,
                                         "url": url,
@@ -581,7 +572,7 @@ def research(query, depth, debug, fallback_only, write, format, filename,
                     fallback_content = await fallback_scrape(url, debug)
                     
                     if fallback_content and len(fallback_content) > 100:
-                        extracted_text = fallback_content[:8000]  # Increased content size limit
+                        extracted_text = fallback_content[:20000]  # Increased content size limit
                         extracted_data.append({
                             "title": title,
                             "url": url,
@@ -605,129 +596,391 @@ def research(query, depth, debug, fallback_only, write, format, filename,
         console.print("❌ No content could be extracted from any sources.")
         return 1  # Return error code for better detection in test script
     
-    # Extract sources information for the LLM
-    sources_info = ""
-    for idx, data in enumerate(extracted_data, 1):
-        sources_info += f"Source {idx}: {data['title']}\n"
-        sources_info += f"URL: {data['url']}\n"
-        sources_info += f"Content: {data['content'][:1000]}...\n\n"
-    
-    # Create prompt for document generation
-    if format == 'markdown':
-        doc_template = """Create an extremely detailed, comprehensive, and in-depth markdown document about this topic. Go beyond surface-level explanations and dive deep into all aspects of the subject. The document should be thorough, informative, and provide expert-level insights.
-
-IMPORTANT CONTENT REQUIREMENTS:
-1. Create a substantial document with at least 2000-3000 words of content
-2. Include detailed explanations of all key concepts
-3. Provide multiple examples, case studies, or applications where relevant
-4. Discuss different perspectives, approaches, or methodologies
-5. Include technical details, specifications, or data when applicable
-6. Address common questions, challenges, or misconceptions
-7. Provide context, history, and future trends when relevant
-8. Use your knowledge to expand on the research data where appropriate
-
-Use proper markdown formatting with headings, subheadings, lists, and code blocks. 
-
-For code blocks, follow these strict formatting rules:
-1. ALWAYS use three backticks (```) to open AND close every code block
-2. ALWAYS specify a language (e.g., ```python, ```bash) for syntax highlighting
-3. ALWAYS include a blank line before AND after each code block
-4. NEVER have text directly adjacent to the opening or closing fence
-5. ALWAYS close code blocks before starting new paragraphs or sections
-6. When showing examples with code, ALWAYS close the code block before continuing with explanations
-
-EXTREMELY IMPORTANT: When showing examples, don't write phrases like "For example:" and then start a code block without closing it. Always close all code blocks even when explaining examples.
-
-For example (correct formatting):
-```python
-print("Hello, world!")
-```
-
-This is text outside the code block, explaining the example.
-
-For all markdown headings, use the following format:
-# Main Title (H1)
-## Section Title (H2)
-### Subsection Title (H3)
-
-When creating a Table of Contents, follow these formatting rules:
-1. Include an anchor ID that exactly matches the heading text but converted to lowercase with spaces replaced by hyphens
-2. Remove any special characters from anchor IDs (keep only letters, numbers, and hyphens)
-3. Use this format for all TOC entries: [Exact Section Title](#lowercase-with-hyphens)
-
-For example:
-## Table of Contents
-1. [Introduction](#introduction)
-2. [Basic Commands](#basic-commands)
-3. [Advanced Usage](#advanced-usage)
-   - [Sub-Feature One](#sub-feature-one)
-   - [Sub-Feature Two](#sub-feature-two)
-
-Do not use bold formatting (**text**) for TOC entries - always use proper link syntax.
-
-EXTREMELY IMPORTANT: Do NOT include ```markdown or ```anything at the beginning of the document. 
-EXTREMELY IMPORTANT: Do NOT include ``` at the end of the document.
-EXTREMELY IMPORTANT: Only use triple backticks for actual code blocks within the document, not for the document itself."""
-    elif format == 'html':
-        doc_template = "Create a comprehensive HTML document about this topic. Use proper HTML structure and tags."
-    else:
-        doc_template = "Create a comprehensive document about this topic in plain text format."
-    
-    # Add image instructions if we have images
-    if image_data["images"] and (format == 'markdown' or format == 'html'):
-        doc_template += f"""
-
-Include {len(image_data['images'])} relevant image placeholders distributed throughout the document.
-YOU MUST FOLLOW THESE EXACT PLACEHOLDER FORMATS:
-
-For markdown documents:
-- Place the first image after the introduction: ![Descriptive Caption](IMAGE_1)
-- Place additional images after major section headings: ![Descriptive Caption](IMAGE_2), ![Descriptive Caption](IMAGE_3), etc.
-- Choose descriptive captions that enhance understanding of the content
-
-For HTML documents:
-- First image: <img src="IMAGE_1" alt="Descriptive Caption">
-- Additional images: <img src="IMAGE_2" alt="Descriptive Caption">, <img src="IMAGE_3" alt="Descriptive Caption">, etc.
-
-IMPORTANT INSTRUCTIONS FOR IMAGE PLACEMENT:
-1. DO NOT cluster all images together - distribute them throughout the document
-2. Place images at logical breaks in the content (after introductions, between major sections)
-3. Make sure captions are relevant to the surrounding content
-4. DO NOT modify the "IMAGE_n" placeholder format - it must remain exactly as specified
-5. YOU MUST include ALL {len(image_data['images'])} image placeholders in your document
-
-Example of correct image placement in markdown:
-# Section Title
-Text content for this section...
-
-![Descriptive Caption for This Section](IMAGE_1)
-
-More text content...
-"""
-    
-    # Build the full prompt
-    prompt = f"""
-    {doc_template}
-    
-    Topic: {query_str}
-    
-    Based on the following web research results, create a well-structured document that covers all important aspects of the topic.
-    
-    RESEARCH DATA:
-    {sources_info}
-    
-    Make the document coherent, informative, and comprehensive.
-    """
-    
-    console.print("🧠 Analyzing collected information...")
-    
-    # Get the LLM instance
-    llm = get_llm()
-    
     try:
-        # Generate content - use professional mode for document generation
-        professional_mode = write  # Use professional mode when generating a document
-        response = asyncio.run(llm.generate_response(prompt, professional_mode=professional_mode))
+        # Instead of processing all sources at once, we'll chunk them
+        all_extracted_data = extracted_data.copy()
+        
+        # Check if we're generating a snippet or summary (no chunking needed)
+        if snippet or summarize:
+            # For snippets or summaries, we don't need chunking
+            # Combine a limited amount of data from all sources
+            combined_sources_info = ""
+            source_limit = 2000 if snippet else 5000  # Very limited for snippets
+            
+            for idx, data in enumerate(all_extracted_data, 1):
+                excerpt_length = min(source_limit // len(all_extracted_data), len(data['content']))
+                combined_sources_info += f"Source {idx}: {data['title']}\n"
+                combined_sources_info += f"URL: {data['url']}\n"
+                combined_sources_info += f"Content: {data['content'][:excerpt_length]}...\n\n"
+            
+            # Create the appropriate template based on format and mode
+            if snippet:
+                if format == 'markdown':
+                    doc_template = """Create a VERY BRIEF SNIPPET (maximum 2-3 paragraphs) about this topic.
+                    
+                    The snippet should provide a quick overview that could fit in a preview card or executive summary.
+                    Include only the most essential information - core definition, key points, and relevance.
+                    
+                    Keep the total length under 300 words. Use markdown formatting.
+                    """
+                elif format == 'html':
+                    doc_template = """Create a VERY BRIEF SNIPPET (maximum 2-3 paragraphs) about this topic in HTML format. The ENTIRE content must use proper HTML tags, not Markdown.
+                    
+                    The snippet should provide a quick overview that could fit in a preview card or executive summary.
+                    Include only the most essential information - core definition, key points, and relevance.
+                    
+                    Keep the total length under 300 words.
+
+EXTREMELY IMPORTANT: You MUST use HTML tags for EVERYTHING and NEVER use Markdown syntax anywhere in your response.
+For example:
+- CORRECT: <h1>Main Heading</h1>
+- INCORRECT: # Main Heading
+
+- CORRECT: <p>This is a paragraph with <strong>bold text</strong>.</p>
+- INCORRECT: This is a paragraph with **bold text**.
+
+- CORRECT: <ul><li>List item</li></ul>
+- INCORRECT: - List item
+
+DO NOT EVER USE # FOR HEADINGS OR ** FOR BOLD TEXT OR - FOR LISTS. Always use proper HTML tags.
+
+Every single piece of content must be enclosed in appropriate HTML tags. Do not mix HTML and Markdown syntax anywhere.
+                    """
+                else:
+                    doc_template = """Create a VERY BRIEF SNIPPET (maximum 2-3 paragraphs) about this topic.
+                    
+                    The snippet should provide a quick overview that could fit in a preview card or executive summary.
+                    Include only the most essential information - core definition, key points, and relevance.
+                    
+                    Keep the total length under 300 words.
+                    """
+            elif summarize:
+                if format == 'markdown':
+                    doc_template = """
+                    ===== CRITICALLY IMPORTANT IMAGE INSTRUCTIONS =====
+                    You MUST include image placeholders in your document exactly like this:
+                    - [INSERT_IMAGE_1_HERE] for the first image
+                    - [INSERT_IMAGE_2_HERE] for the second image (if available)
+                    - [INSERT_IMAGE_3_HERE] for the third image (if available)
+                    
+                    Example of correct insertion:
+                    "<p>This technology has wide applications. [INSERT_IMAGE_1_HERE] As shown above...</p>"
+                    
+                    Place these placeholders at meaningful points throughout your document:
+                    - After introductory paragraphs
+                    - When illustrating key concepts
+                    - At major section transitions
+                    - When discussing visual concepts
+                    
+                    DO NOT cluster all images together - evenly distribute them throughout different sections.
+                    ==============================================
+                    
+                    Create a CONCISE SUMMARY document about this topic.
+                    
+                    The summary should be informative but significantly shorter than a comprehensive document.
+                    Focus on providing:
+                    - Clear definition and overview
+                    - Key points and important aspects
+                    - Basic background information
+                    - Current relevance
+                    
+                    Keep the length moderate (around 800-1000 words). Use markdown formatting with appropriate headings.
+                    
+                    EXTREMELY IMPORTANT:
+                    1. DO NOT start your response with ```markdown or any code fences
+                    2. DO NOT enclose your entire response in code fences
+                    3. Do not use any opening or closing fences in your response
+                    """
+                elif format == 'html':
+                    doc_template = """Create a CONCISE SUMMARY document about this topic in HTML format. The ENTIRE content must use proper HTML tags, not Markdown.
+                    
+                    The summary should be informative but significantly shorter than a comprehensive document.
+                    Focus on providing:
+                    - Clear definition and overview
+                    - Key points and important aspects
+                    - Basic background information
+                    - Current relevance
+                    
+                    Keep the length moderate (around 800-1000 words).
+                    
+                    ===== CRITICALLY IMPORTANT IMAGE INSTRUCTIONS =====
+                    You MUST include image placeholders in your document exactly like this:
+                    - [INSERT_IMAGE_1_HERE] for the first image
+                    - [INSERT_IMAGE_2_HERE] for the second image (if available)
+                    - [INSERT_IMAGE_3_HERE] for the third image (if available)
+                    
+                    Example of correct insertion:
+                    "<p>This technology has wide applications. [INSERT_IMAGE_1_HERE] As shown above...</p>"
+                    
+                    Place these placeholders at meaningful points throughout your document:
+                    - After introductory paragraphs
+                    - When illustrating key concepts
+                    - At major section transitions
+                    - When discussing visual concepts
+                    
+                    DO NOT cluster all images together - evenly distribute them throughout different sections.
+                    ==============================================
+                    
+                    Create a CONCISE SUMMARY document about this topic in HTML format. The ENTIRE content must use proper HTML tags, not Markdown.
+                    
+                    The summary should be informative but significantly shorter than a comprehensive document.
+                    Focus on providing:
+                    - Clear definition and overview
+                    - Key points and important aspects
+                    - Basic background information
+                    - Current relevance
+                    
+                    Keep the length moderate (around 800-1000 words).
+                    """
+                else:
+                    doc_template = """Create a CONCISE SUMMARY document about this topic.
+                    
+                    The summary should be informative but significantly shorter than a comprehensive document.
+                    Focus on providing:
+                    - Clear definition and overview
+                    - Key points and important aspects
+                    - Basic background information
+                    - Current relevance
+                    
+                    Keep the length moderate (around 800-1000 words). Use clear paragraph breaks and section indicators.
+                    """
+            
+            # Get image instructions if we have images
+            image_instructions = ""
+            if image_data["images"] and (format == 'markdown' or format == 'html'):
+                from cliche.utils.generate_from_scrape import add_image_instructions
+                image_instructions = add_image_instructions(image_data)
+                # Add extra emphasis on not using code fences
+                image_instructions += "\n\nEXTREMELY IMPORTANT: Do NOT start your response with ```markdown or any code fences. Do NOT enclose your entire response in code fences."
+            
+            # Build the prompt with image instructions placed prominently
+            prompt = f"""
+            {doc_template}
+            
+            {image_instructions}
+            
+            EXTREMELY IMPORTANT: Do NOT start your response with ```markdown or any code fences. 
+            Do NOT enclose your entire response in code fences.
+            
+            Topic: {query_str}
+            
+            Based on the following web research results, create a {('snippet' if snippet else 'summary')}:
+            
+            RESEARCH DATA:
+            {combined_sources_info}
+            """
+            
+            console.print(f"🧠 Generating {'snippet' if snippet else 'summary'} for {query_str}...")
+            
+            # Get the LLM instance
+            llm = get_llm()
+            
+            # Generate content in a single pass
+            professional_mode = write  # Use professional mode when generating a document
+            response = asyncio.run(llm.generate_response(prompt, professional_mode=professional_mode))
+            
+            # For markdown, ensure we have a good title
+            if format == 'markdown' and not response.strip().startswith("# "):
+                title = query_str.title()
+                response = f"# {title}\n\n{response}"
+        else:
+            # Process in chunks of 2 sources at a time
+            chunk_size = 2
+            chunked_responses = []
+            
+            for chunk_start in range(0, len(all_extracted_data), chunk_size):
+                chunk_end = min(chunk_start + chunk_size, len(all_extracted_data))
+                chunk_data = all_extracted_data[chunk_start:chunk_end]
+                
+                sources_info = ""
+                for idx, data in enumerate(chunk_data, chunk_start + 1):
+                    sources_info += f"Source {idx}: {data['title']}\n"
+                    sources_info += f"URL: {data['url']}\n"
+                    sources_info += f"Content: {data['content'][:5000]}...\n\n"
+                
+                # Create prompt for document generation specific to this chunk
+                if format == 'markdown':
+                    if chunk_start == 0:  # First chunk includes introduction
+                        doc_template = """
+                        ===== CRITICALLY IMPORTANT IMAGE INSTRUCTIONS =====
+                        You MUST include image placeholders in your document exactly like this:
+                        - [INSERT_IMAGE_1_HERE] for the first image
+                        - [INSERT_IMAGE_2_HERE] for the second image (if available)
+                        - [INSERT_IMAGE_3_HERE] for the third image (if available)
+                        
+                        Example of correct insertion:
+                        "Machine learning has revolutionized data analysis. [INSERT_IMAGE_1_HERE] This breakthrough..."
+                        
+                        Place these placeholders at meaningful points throughout your document:
+                        - After introductory paragraphs
+                        - When illustrating key concepts
+                        - At major section transitions
+                        - When discussing visual concepts
+                        
+                        DO NOT cluster all images together - evenly distribute them throughout different sections.
+                        ==============================================
+                        
+                        Create the FIRST PART of an extremely detailed, comprehensive markdown document about this topic.
+            
+                        Please focus on the INTRODUCTION and FIRST MAJOR SECTIONS of the topic, covering:
+                        - Overview and definition of the topic
+                        - Historical background and origins
+                        - Core concepts and fundamentals
+                        - Early developments and pioneers
+                        
+                        This is the FIRST CHUNK of a multi-part document, so focus on providing a strong foundation.
+                        
+                        Format with proper markdown headings (## for main sections, ### for subsections).
+                        
+                        EXTREMELY IMPORTANT:
+                        1. DO NOT start your response with ```markdown or any code fences
+                        2. DO NOT enclose your entire response in code fences
+                        3. Do not use any opening or closing fences in your response
+                        """
+                    else:  # Continuation chunks
+                        doc_template = f"""Create the NEXT PART (part {chunk_start//chunk_size + 1}) of an extremely detailed, comprehensive markdown document about this topic.
+            
+            Please continue the document with ADDITIONAL SECTIONS covering:
+            - Advanced concepts and developments
+            - Modern applications and technologies  
+            - Current trends and future directions
+            - Challenges and limitations
+            
+            This is a CONTINUATION of a document, so do not include introductory material that would already be covered.
+            
+            Format with proper markdown headings (## for main sections, ### for subsections).
+            
+            EXTREMELY IMPORTANT:
+            1. DO NOT start your response with ```markdown or any code fences
+            2. DO NOT enclose your entire response in code fences
+            3. Do not use any opening or closing fences in your response
+            
+            IMPORTANT INSTRUCTIONS FOR IMAGE PLACEMENT:
+            - If images are provided, include placeholder markers like [INSERT_IMAGE_1_HERE], [INSERT_IMAGE_2_HERE], etc.
+            - Place these image placeholders at meaningful points throughout your response, not all at the beginning
+            - Good places for images are after introductory paragraphs or to illustrate key concepts
+            - Do not cluster all images together - spread them throughout different sections."""
+                elif format == 'html':
+                    doc_template = f"""Create part {chunk_start//chunk_size + 1} of a comprehensive HTML document about this topic. The ENTIRE content must use proper HTML tags, not Markdown.
+
+EXTREMELY IMPORTANT: You MUST use HTML tags for EVERYTHING and NEVER use Markdown syntax anywhere in your response.
+For example:
+- CORRECT: <h1>Main Heading</h1>
+- INCORRECT: # Main Heading
+
+- CORRECT: <h2>Section Heading</h2>
+- INCORRECT: ## Section Heading
+
+- CORRECT: <p>This is a paragraph with <strong>bold text</strong>.</p>
+- INCORRECT: This is a paragraph with **bold text**.
+
+- CORRECT: <ul><li>List item</li><li>Another item</li></ul>
+- INCORRECT: - List item
+             - Another item
+
+DO NOT EVER USE # FOR HEADINGS OR ** FOR BOLD TEXT OR - FOR LISTS. Always use proper HTML tags like <h1>, <strong>, <ul><li>, etc.
+
+Every single piece of content must be enclosed in appropriate HTML tags. Do not mix HTML and Markdown syntax anywhere.
+                    
+                    IMPORTANT INSTRUCTIONS FOR IMAGE PLACEMENT:
+                    - If images are provided, include placeholder markers like [INSERT_IMAGE_1_HERE], [INSERT_IMAGE_2_HERE], etc.
+                    - These simple placeholders will be replaced with actual images
+                    - Place these image placeholders at meaningful points throughout your document
+                    - Good places for images are after introductory paragraphs or to illustrate key concepts
+                    - Do not cluster all images together - spread them throughout different sections
+                    """
+                else:
+                    doc_template = f"""Create part {chunk_start//chunk_size + 1} of a comprehensive document about this topic in plain text format.
+                    
+            IMPORTANT INSTRUCTIONS FOR IMAGE PLACEMENT:
+            - If images are provided, include placeholder markers like IMAGE_{chunk_start + 1}, IMAGE_{chunk_start + 2}, etc.
+            - Place these markers at meaningful points throughout your document
+            - Do not cluster all images together - spread them throughout different sections."""
+                
+                # Build the chunk-specific prompt
+                prompt = f"""
+                {doc_template}
+                
+                Topic: {query_str}
+                
+                Based on the following web research results, create a well-structured document section.
+                
+                RESEARCH DATA:
+                {sources_info}
+                
+                Make this section detailed, informative, and comprehensive.
+                """
+                
+                console.print(f"🧠 Analyzing chunk {chunk_start//chunk_size + 1} of {(len(all_extracted_data) + chunk_size - 1)//chunk_size}...")
+                
+                # Get the LLM instance
+                llm = get_llm()
+                
+                try:
+                    # Generate content for this chunk
+                    professional_mode = write  # Use professional mode when generating a document
+                    chunk_response = asyncio.run(llm.generate_response(prompt, professional_mode=professional_mode))
+                    chunked_responses.append(chunk_response)
+                except Exception as e:
+                    console.print(f"❌ Error generating response for chunk {chunk_start//chunk_size + 1}: {str(e)}")
+                    continue
+            
+            # Combine all chunk responses into a single document
+            if chunked_responses:
+                response = "\n\n".join(chunked_responses)
+                
+                # For markdown, ensure we have a good title and table of contents
+                if format == 'markdown' and not response.strip().startswith("# "):
+                    title = query_str.title()
+                    response = f"# {title}\n\n{response}"
+                
+                # Clean up any stray markdown code fences - import if needed
+                if format == 'markdown':
+                    from cliche.utils.generate_from_scrape import clean_markdown_document
+                    response = clean_markdown_document(response)
+                
+                # Clean up any stray markdown code fences from HTML content
+                if format == 'html':
+                    # Remove any markdown code fences that might appear in the HTML content
+                    response = re.sub(r'```html\s*', '', response)
+                    response = re.sub(r'```\s*', '', response)
+                    
+                    # Convert headings (all levels h1-h6)
+                    response = re.sub(r'^#{1}\s+(.+?)$', r'<h1>\1</h1>', response, flags=re.MULTILINE)
+                    response = re.sub(r'^#{2}\s+(.+?)$', r'<h2>\1</h2>', response, flags=re.MULTILINE)
+                    response = re.sub(r'^#{3}\s+(.+?)$', r'<h3>\1</h3>', response, flags=re.MULTILINE)
+                    response = re.sub(r'^#{4}\s+(.+?)$', r'<h4>\1</h4>', response, flags=re.MULTILINE)
+                    response = re.sub(r'^#{5}\s+(.+?)$', r'<h5>\1</h5>', response, flags=re.MULTILINE)
+                    response = re.sub(r'^#{6}\s+(.+?)$', r'<h6>\1</h6>', response, flags=re.MULTILINE)
+                    
+                    # Convert bold text
+                    response = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', response)
+                    
+                    # Convert italic text
+                    response = re.sub(r'\*(.+?)\*', r'<em>\1</em>', response)
+                    
+                    # Convert list items
+                    response = re.sub(r'^\s*-\s+(.+?)$', r'<li>\1</li>', response, flags=re.MULTILINE)
+                    
+                    # Wrap adjacent list items in <ul> tags
+                    list_pattern = r'(<li>.*?</li>\s*){2,}'
+                    matches = re.finditer(list_pattern, response, re.DOTALL)
+                    for match in matches:
+                        orig = match.group(0)
+                        wrapped = f'<ul>{orig}</ul>'
+                        response = response.replace(orig, wrapped)
+                    
+                    # Ensure all paragraphs are wrapped in <p> tags
+                    # Find text that's not inside any HTML tags and wrap it with <p>
+                    lines = response.split('\n')
+                    for i, line in enumerate(lines):
+                        if line.strip() and not re.match(r'^\s*<', line) and not re.match(r'^\s*$', line):
+                            # If it's not already in an HTML tag, wrap it
+                            lines[i] = f'<p>{line}</p>'
+                    response = '\n'.join(lines)
+            else:
+                console.print("❌ No content could be generated from any chunks.")
+                return 1  # Return error code
         
         # Process the generated content to replace image placeholders
         if image_data["images"] and (format == 'markdown' or format == 'html'):
@@ -738,31 +991,75 @@ More text content...
             all_image_indicators = len(re.findall(r'IMAGE_\d+', response))
             print(f"🔍 Found {all_image_indicators} instances of IMAGE_n in document")
             
-            # If no placeholders found, let's modify our approach
+            # If no placeholders found, let's use LLM to suggest image placement
             if all_image_indicators == 0:
-                print("❌ No image placeholders found in the document.")
-                print("💡 Manually inserting images at strategic locations...")
+                print("💡 Using AI-powered image placement to find optimal locations...")
                 
-                # Insert images at reasonable locations (after intro, between sections)
+                # Split response into paragraphs for placement
                 paragraphs = response.split('\n\n')
                 
-                # Find headings to identify section breaks
-                heading_indices = [i for i, p in enumerate(paragraphs) if p.startswith('#')]
+                # Get LLM recommendations for image placement
+                insertion_points = None
+                try:
+                    # Use asyncio.run to execute the async function
+                    insertion_points = asyncio.run(get_image_placement_suggestions(
+                        llm=llm, 
+                        document_content=response, 
+                        image_count=len(image_data["images"]),
+                        topic=query_str,
+                        format=format
+                    ))
+                except Exception as e:
+                    print(f"⚠️ Error getting image placement suggestions: {str(e)}")
+                    insertion_points = None
                 
-                # Choose insertion points - after intro and major sections
-                insertion_points = []
+                # If LLM suggestions aren't available or valid, fallback to our distribution method
+                if not insertion_points:
+                    print("⚠️ Couldn't get valid placement suggestions, falling back to evenly distributed images...")
+                    
+                    # Find headings to identify section breaks
+                    heading_indices = [i for i, p in enumerate(paragraphs) if p.startswith('#')]
+                    
+                    # If we have enough headings, distribute images evenly across the document
+                    if len(heading_indices) >= len(image_data["images"]):
+                        # Choose evenly spaced heading indices
+                        step = len(heading_indices) // (len(image_data["images"]) + 1)
+                        if step < 1:
+                            step = 1
+                        
+                        # Select insertion points after evenly distributed headings
+                        insertion_points = []
+                        for i in range(1, len(image_data["images"]) + 1):
+                            idx = min(i * step, len(heading_indices) - 1)
+                            heading_idx = heading_indices[idx]
+                            # Insert after the paragraph following the heading
+                            insertion_point = min(heading_idx + 1, len(paragraphs) - 1)
+                            if insertion_point not in insertion_points:
+                                insertion_points.append(insertion_point)
+                    else:
+                        # Not enough headings, distribute evenly throughout the document
+                        total_paragraphs = len(paragraphs)
+                        spacing = total_paragraphs // (len(image_data["images"]) + 1)
+                        
+                        # Ensure we don't insert at the very beginning
+                        start_point = min(4, total_paragraphs // 10)
+                        
+                        insertion_points = []
+                        for i in range(len(image_data["images"])):
+                            # Calculate position ensuring even distribution
+                            pos = start_point + (i + 1) * spacing
+                            pos = min(pos, total_paragraphs - 1)  # Stay within bounds
+                            
+                            # Avoid inserting immediately before a heading
+                            if pos < total_paragraphs - 1 and paragraphs[pos + 1].startswith('#'):
+                                pos += 2  # Skip past the heading and to the content
+                            
+                            if pos not in insertion_points and pos < total_paragraphs:
+                                insertion_points.append(pos)
                 
-                # After the intro (3-4 paragraphs in)
-                if len(paragraphs) > 4:
-                    insertion_points.append(min(4, len(paragraphs) - 1))
-                
-                # After major section headings
-                for i, idx in enumerate(heading_indices):
-                    if idx > 0 and i < len(image_data["images"]):
-                        # Insert after the paragraph following the heading
-                        insertion_point = min(idx + 1, len(paragraphs) - 1)
-                        if insertion_point not in insertion_points:
-                            insertion_points.append(insertion_point)
+                # Sort insertion points to maintain document structure
+                insertion_points.sort()
+                print(f"💡 Selected {len(insertion_points)} insertion points at paragraph indices: {insertion_points}")
                 
                 # Make sure we don't have more insertion points than images
                 insertion_points = insertion_points[:len(image_data["images"])]
@@ -772,119 +1069,200 @@ More text content...
                     if i < len(image_data["images"]):
                         img_data = image_data["images"][i]
                         img_alt = img_data["alt_text"] or "Image"
-                        img_markdown = f"\n\n![{img_alt}]({img_data['url']})\n\n"
-                        paragraphs.insert(insertion_idx + i, img_markdown)  # +i to account for shifting indices
+                        
+                        if format == 'markdown':
+                            img_content = f"\n\n![{img_alt}]({img_data['url']})\n\n"
+                        else:  # HTML format
+                            img_content = f"\n\n<img src=\"{img_data['url']}\" alt=\"{img_alt}\" style=\"max-width: 100%; height: auto;\">\n\n"
+                            
+                        paragraphs.insert(insertion_idx + i, img_content)  # +i to account for shifting indices
                 
                 # Reconstruct the document
                 response = '\n\n'.join(paragraphs)
-                print(f"✅ Inserted {len(insertion_points)} images into the document")
+                print(f"✅ Inserted {len(insertion_points)} images evenly throughout the document")
             else:
-                # Original approach - try to replace placeholders
-                for i, img_data in enumerate(image_data["images"]):
-                    # 1-indexed for placeholders
-                    img_idx = i + 1
-                    print(f"🔄 Processing image {img_idx} of {len(image_data['images'])}")
+                # If no explicit placeholders found in the document, use AI-powered image placement
+                if all_image_indicators == 0:
+                    print("💡 Using AI-powered image placement to find optimal locations...")
+        else:
+            # Original approach - try to replace placeholders
+            for i, img_data in enumerate(image_data["images"]):
+                # 1-indexed for placeholders
+                img_idx = i + 1
+                print(f"🔄 Processing image {img_idx} of {len(image_data['images'])}")
+                
+                if format == 'markdown':
+                    # Check for simplified placeholder first - it's easier to handle
+                    simplified_placeholder = f"[INSERT_IMAGE_{img_idx}_HERE]"
+                    if simplified_placeholder in response:
+                        alt_text = img_data.get("alt_text") or "Image"
+                        proper_image = f"![{alt_text}]({img_data['url']})"
+                        print(f"✅ Replacing simplified placeholder '{simplified_placeholder}' with '{proper_image}'")
+                        response = response.replace(simplified_placeholder, proper_image)
+                        image_replaced = True
+                        continue
+                        
+                    # Try to find patterns with IMAGE placeholder in various formats
+                    img_placeholder_patterns = [
+                        r'!\[([^\]]+)\]\(IMAGE_{})'.format(img_idx),  # ![Alt text](IMAGE_n)
+                        r'!\[([^\]]+)\]!\[([^\]]+)\]\(/[^)]+\)'.format(img_idx),  # ![Alt]![Description](/path)
+                        r'!\[([^\]]+)\]IMAGE_{}'.format(img_idx),  # ![Alt]IMAGE_n
+                        r'!\[([^\]]+)\]\[IMAGE_{}\]'.format(img_idx),  # ![Alt][IMAGE_n]
+                        r'\(IMAGE_{}\)'.format(img_idx),  # (IMAGE_n)
+                        r'IMAGE_{}'.format(img_idx),  # IMAGE_n plain
+                        r'\[INSERT_IMAGE_{}_HERE\]'.format(img_idx)  # [INSERT_IMAGE_n_HERE]
+                    ]
                     
-                    if format == 'markdown':
-                        # Try to find patterns with IMAGE placeholder in various formats
-                        img_placeholder_patterns = [
-                            r'!\[([^\]]+)\]\(IMAGE_{}\)'.format(img_idx),  # ![Alt text](IMAGE_n)
-                            r'!\[([^\]]+)\]!\[([^\]]+)\]\(/[^)]+\)'.format(img_idx),  # ![Alt]![Description](/path)
-                            r'!\[([^\]]+)\]IMAGE_{}'.format(img_idx),  # ![Alt]IMAGE_n
-                            r'!\[([^\]]+)\]\[IMAGE_{}\]'.format(img_idx),  # ![Alt][IMAGE_n]
-                            r'\(IMAGE_{}\)'.format(img_idx),  # (IMAGE_n)
-                            r'IMAGE_{}'.format(img_idx)  # IMAGE_n plain
+                    # First try these exact patterns
+                    image_replaced = False
+                    for pattern in img_placeholder_patterns:
+                        print(f"🔍 Looking for pattern: {pattern}")
+                        matches = list(re.finditer(pattern, response))
+                        print(f"   Found {len(matches)} matches for this pattern")
+                        
+                        for match in matches:
+                            image_replaced = True
+                            full_match = match.group(0)
+                            match_start = match.start()
+                            match_end = match.end()
+                            
+                            # Show context around the match for debugging
+                            context_start = max(0, match_start - 20)
+                            context_end = min(len(response), match_end + 20)
+                            context = response[context_start:context_end].replace('\n', '\\n')
+                            print(f"   Match context: ...{context}...")
+                            
+                            # Get the alt text if available, or use a default
+                            try:
+                                alt_text = match.group(1) if match.lastindex and match.lastindex >= 1 else "Image"
+                            except:
+                                alt_text = "Image"
+                                
+                            # Create proper markdown image
+                            proper_image = f"![{alt_text}]({img_data['url']})"
+                            print(f"✅ Replacing '{full_match}' with '{proper_image}'")
+                            response = response.replace(full_match, proper_image)
+                    
+                    # If no pattern matched, fall back to simple replacement
+                    if not image_replaced:
+                        print(f"⚠️ No complex patterns matched for image {img_idx}, trying simple replacements")
+                        
+                        # Check for the exact string first
+                        exact_placeholder = f"IMAGE_{img_idx}"
+                        if exact_placeholder in response:
+                            print(f"   Found exact string '{exact_placeholder}'")
+                            
+                            # Try to find more context
+                            for i in range(len(response) - len(exact_placeholder)):
+                                if response[i:i+len(exact_placeholder)] == exact_placeholder:
+                                    context_start = max(0, i - 30)
+                                    context_end = min(len(response), i + len(exact_placeholder) + 30)
+                                    context = response[context_start:context_end].replace('\n', '\\n')
+                                    print(f"   Context: ...{context}...")
+                    
+                        # Check for the exact placeholder strings
+                        placeholder_formats = [
+                            f"IMAGE_{img_idx}",
+                            f"[INSERT_IMAGE_{img_idx}_HERE]"
                         ]
                         
-                        # First try these exact patterns
-                        image_replaced = False
-                        for pattern in img_placeholder_patterns:
-                            print(f"🔍 Looking for pattern: {pattern}")
-                            matches = list(re.finditer(pattern, response))
-                            print(f"   Found {len(matches)} matches for this pattern")
-                            
-                            for match in matches:
-                                image_replaced = True
-                                full_match = match.group(0)
-                                match_start = match.start()
-                                match_end = match.end()
-                                
-                                # Show context around the match for debugging
-                                context_start = max(0, match_start - 20)
-                                context_end = min(len(response), match_end + 20)
-                                context = response[context_start:context_end].replace('\n', '\\n')
-                                print(f"   Match context: ...{context}...")
-                                
-                                # Get the alt text if available, or use a default
-                                try:
-                                    alt_text = match.group(1) if match.lastindex and match.lastindex >= 1 else "Image"
-                                except:
-                                    alt_text = "Image"
-                                    
-                                # Create proper markdown image
-                                proper_image = f"![{alt_text}]({img_data['url']})"
-                                print(f"✅ Replacing '{full_match}' with '{proper_image}'")
-                                response = response.replace(full_match, proper_image)
+                        img_replaced = False
+                        for placeholder in placeholder_formats:
+                            if placeholder in response:
+                                # Replace just the placeholder with the image URL
+                                if format == 'html':
+                                    # For HTML, replace with proper img tag
+                                    img_tag = f'<img src="{img_data["url"]}" alt="{img_data["alt_text"] or "Image"}" style="max-width: 100%; height: auto;">'
+                                    print(f"Replacing {placeholder} with HTML image tag")
+                                    response = response.replace(placeholder, img_tag)
+                                else:
+                                    # For markdown, replace with proper markdown image
+                                    md_img = f"![{img_data['alt_text'] or 'Image'}]({img_data['url']})"
+                                    print(f"Replacing {placeholder} with {md_img}")
+                                    response = response.replace(placeholder, md_img)
+                                img_replaced = True
+                                break
                         
-                        # If no pattern matched, fall back to simple replacement
-                        if not image_replaced:
-                            print(f"⚠️ No complex patterns matched for image {img_idx}, trying simple replacements")
-                            
-                            # Check for the exact string first
-                            exact_placeholder = f"IMAGE_{img_idx}"
-                            if exact_placeholder in response:
-                                print(f"   Found exact string '{exact_placeholder}'")
-                                
-                                # Try to find more context
-                                for i in range(len(response) - len(exact_placeholder)):
-                                    if response[i:i+len(exact_placeholder)] == exact_placeholder:
-                                        context_start = max(0, i - 30)
-                                        context_end = min(len(response), i + len(exact_placeholder) + 30)
-                                        context = response[context_start:context_end].replace('\n', '\\n')
-                                        print(f"   Context: ...{context}...")
-                            
-                            # Try simple replacements
-                            replacements = [
-                                (f"(IMAGE_{img_idx})", f"({img_data['url']})"),
-                                (f"[IMAGE_{img_idx}]", f"[{img_data['url']}]"),
-                                (f"IMAGE_{img_idx}", img_data["url"])
-                            ]
-                            
-                            for old, new in replacements:
-                                if old in response:
-                                    print(f"Replacing {old} with {new}")
-                                    response = response.replace(old, new)
-                                    image_replaced = True
-                                    break
-                    
-                    elif format == 'html':
-                        # Format for HTML
-                        img_tag = format_image_for_html(
-                            img_data["url"], 
-                            img_data["alt_text"], 
-                            img_data["width"]
-                        )
-                        
-                        # Primary placeholder format: src="IMAGE_{n}"
-                        primary_placeholder = f"IMAGE_{img_idx}"
-                        if primary_placeholder in response:
-                            print(f"Replacing {primary_placeholder} with {img_data['url']}")
-                            response = response.replace(primary_placeholder, img_data["url"])
-                        else:
-                            # Try to find <img src="IMAGE_n" patterns
+                        # If no simple placeholder was found, try the more complex patterns
+                        if not img_replaced:
+                            # Try to find <img src="IMAGE_n" patterns (original method)
                             img_html_pattern = r'<img[^>]*src=["\'](IMAGE_{})["\'][^>]*>'.format(img_idx)
                             matches = re.finditer(img_html_pattern, response)
-                            img_replaced = False
-                            for match in matches:
-                                img_replaced = True
-                                full_match = match.group(0)
-                                # Replace just the src attribute
-                                new_img_tag = full_match.replace(f'src="{primary_placeholder}"', f'src="{img_data["url"]}"')
-                                response = response.replace(full_match, new_img_tag)
-                                print(f"Replaced HTML img tag: {full_match} with {new_img_tag}")
+                            matches_list = list(matches)
                             
-                            if not img_replaced:
-                                print(f"Cannot find {primary_placeholder} in HTML, tried pattern: {img_html_pattern}")
+                            if matches_list:
+                                for match in matches_list:
+                                    img_replaced = True
+                                    full_match = match.group(0)
+                                    # Replace just the src attribute
+                                    new_img_tag = full_match.replace(f'src="{primary_placeholder}"', f'src="{img_data["url"]}"')
+                                    response = response.replace(full_match, new_img_tag)
+                                    print(f"Replaced HTML img tag: {full_match} with {new_img_tag}")
+                
+                elif format == 'html':
+                    # Format for HTML
+                    img_tag = format_image_for_html(
+                        img_data["url"], 
+                        img_data["alt_text"], 
+                        img_data["width"]
+                    )
+                    
+                    # Check for simplified placeholders first
+                    simplified_placeholder = f"[INSERT_IMAGE_{img_idx}_HERE]"
+                    if simplified_placeholder in response:
+                        print(f"Replacing simplified placeholder {simplified_placeholder} with HTML image")
+                        response = response.replace(simplified_placeholder, img_tag)
+                        continue
+                    
+                    # Primary placeholder format: src="IMAGE_{n}"
+                    primary_placeholder = f"IMAGE_{img_idx}"
+                    if primary_placeholder in response:
+                        print(f"Replacing {primary_placeholder} with {img_data['url']}")
+                        response = response.replace(primary_placeholder, img_data["url"])
+                    else:
+                        # Try to find <img src="IMAGE_n" patterns
+                        img_html_pattern = r'<img[^>]*src=["\'](IMAGE_{})["\'][^>]*>'.format(img_idx)
+                        matches = re.finditer(img_html_pattern, response)
+                        img_replaced = False
+                        for match in matches:
+                            img_replaced = True
+                            full_match = match.group(0)
+                            # Replace just the src attribute
+                            new_img_tag = full_match.replace(f'src="{primary_placeholder}"', f'src="{img_data["url"]}"')
+                            response = response.replace(full_match, new_img_tag)
+                            print(f"Replaced HTML img tag: {full_match} with {new_img_tag}")
+                        
+                        if not img_replaced:
+                            print(f"Cannot find {primary_placeholder} in HTML, trying simple replacement")
+                            # Just create a simple image tag and insert it at a strategic location
+                            
+                            # Look for headings to insert after
+                            h_tags = re.finditer(r'<h[1-6][^>]*>.*?</h[1-6]>', response, re.DOTALL)
+                            h_positions = [m.end() for m in h_tags]
+                            
+                            if h_positions and len(h_positions) >= img_idx:
+                                # Insert after a heading
+                                pos = h_positions[min(img_idx, len(h_positions) - 1)]
+                                img_tag = f'<img src="{img_data["url"]}" alt="{img_data["alt_text"] or "Image"}" style="max-width: 100%; height: auto;">'
+                                response = response[:pos] + "\n" + img_tag + "\n" + response[pos:]
+                                print(f"Inserted image tag after heading at position {pos}")
+                                img_replaced = True
+                            elif len(response) > 0:
+                                # If no headings found, insert after the first paragraph or at 1/3 of the document
+                                p_tags = re.finditer(r'<p[^>]*>.*?</p>', response, re.DOTALL)
+                                p_positions = [m.end() for m in p_tags]
+                                
+                                if p_positions and len(p_positions) >= img_idx:
+                                    # Insert after a paragraph
+                                    pos = p_positions[min(img_idx, len(p_positions) - 1)]
+                                else:
+                                    # Insert at roughly 1/3 of the document for first image, 2/3 for second, etc.
+                                    pos = min(int(len(response) * img_idx / (len(image_data["images"]) + 1)), len(response) - 1)
+                                    
+                                img_tag = f'<img src="{img_data["url"]}" alt="{img_data["alt_text"] or "Image"}" style="max-width: 100%; height: auto;">'
+                                response = response[:pos] + "\n" + img_tag + "\n" + response[pos:]
+                                print(f"Inserted image tag at position {pos}")
+                                img_replaced = True
                 
                 # Add credits at the end of the document
                 if image_data["credits"]:
@@ -962,7 +1340,7 @@ More text content...
         else:
             # Display the response in terminal
             console.print("\n" + "=" * 60)
-            console.print("�� RESEARCH RESULTS")
+            console.print("📚 RESEARCH RESULTS")
             console.print("=" * 60)
             console.print(f"\n💡 {response}\n")
             console.print("=" * 60)
@@ -1045,6 +1423,67 @@ def brave_search(query, num_results=5, api_key=None):
     except Exception as e:
         click.echo(f"Error during Brave Search: {str(e)}")
         return []
+
+async def get_image_placement_suggestions(llm, document_content, image_count, topic, format):
+    """Ask the LLM to suggest optimal image placement locations in the document.
+    
+    Args:
+        llm: The LLM instance to use
+        document_content: The content of the document to analyze
+        image_count: Number of images to place
+        topic: The document topic
+        format: The document format (markdown, html)
+        
+    Returns:
+        A list of suggested paragraph indices where images should be placed
+    """
+    # Create a prompt specifically for image placement
+    placement_prompt = f"""
+    I've generated a {format} document about "{topic}". Now I need to place {image_count} images at optimal locations.
+    
+    Please analyze this document and suggest the {image_count} best locations to place relevant images.
+    
+    For each suggested location:
+    1. Identify the paragraph number (counting from 0)
+    2. Explain why this is a good location (e.g., introduces a key concept, visualizes an example)
+    
+    Your response should be in this format:
+    PLACEMENT 1: Paragraph X - Reason
+    PLACEMENT 2: Paragraph Y - Reason
+    ... and so on
+    
+    Here's the document content:
+    ---
+    {document_content}
+    ---
+    
+    IMPORTANT: Focus on finding contextually relevant placements where images would enhance understanding.
+    """
+    
+    # Get suggestions from the LLM
+    response = await llm.generate_response(placement_prompt, professional_mode=True)
+    
+    # Parse the response to extract paragraph indices
+    suggested_indices = []
+    
+    # Look for "PLACEMENT X: Paragraph Y" patterns
+    placement_pattern = r'PLACEMENT\s+\d+\s*:\s*Paragraph\s+(\d+)'
+    matches = re.finditer(placement_pattern, response)
+    
+    for match in matches:
+        try:
+            paragraph_index = int(match.group(1))
+            suggested_indices.append(paragraph_index)
+        except:
+            continue
+    
+    # If we couldn't extract valid suggestions, fallback to evenly distributed placements
+    if not suggested_indices or len(suggested_indices) < image_count:
+        # Our existing fallback method which evenly distributes images
+        return None
+    
+    # Return only up to the requested number of placements
+    return suggested_indices[:image_count]
 
 if __name__ == "__main__":
     research()
