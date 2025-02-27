@@ -10,6 +10,11 @@ All notable changes to the CLIche project will be documented in this file.
   - Unified both commands to use AI-powered contextual image placement
   - Simplified the codebase by using consistent approach for all document generation
   - Improved user experience with cleaner output messages
+- 🖼️ Extended AI-powered image placement to the generate command
+  - Removed verbose prompt instructions
+  - Simplified image processing logic
+  - Created consistent experience across all document generation commands
+  - Improved document generation quality with better formatting
 
 ## [1.3.4] - 2024-08-02
 
