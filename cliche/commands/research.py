@@ -725,8 +725,10 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
             
             {image_instructions}
             
-            EXTREMELY IMPORTANT: Do NOT start your response with ```markdown or any code fences. 
-            Do NOT enclose your entire response in code fences.
+            EXTREMELY IMPORTANT:
+            1. DO NOT start your response with ```markdown or any code fences
+            2. DO NOT enclose your entire response in code fences
+            3. Do not use any opening or closing fences in your response
             
             Topic: {query_str}
             
@@ -802,12 +804,7 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
             1. DO NOT start your response with ```markdown or any code fences
             2. DO NOT enclose your entire response in code fences
             3. Do not use any opening or closing fences in your response
-            
-            IMPORTANT INSTRUCTIONS FOR IMAGE PLACEMENT:
-            - If images are provided, include placeholder markers like [INSERT_IMAGE_1_HERE], [INSERT_IMAGE_2_HERE], etc.
-            - Place these placeholders at meaningful points throughout your response, not all at the beginning
-            - Good places for images are after introductory paragraphs or to illustrate key concepts
-            - Do not cluster all images together - spread them throughout different sections."""
+            """
                 elif format == 'html':
                     doc_template = f"""Create part {chunk_start//chunk_size + 1} of a comprehensive HTML document about this topic. The ENTIRE content must use proper HTML tags, not Markdown.
 
@@ -828,22 +825,9 @@ For example:
 
 DO NOT EVER USE # FOR HEADINGS OR ** FOR BOLD TEXT OR - FOR LISTS. Always use proper HTML tags like <h1>, <strong>, <ul><li>, etc.
 
-Every single piece of content must be enclosed in appropriate HTML tags. Do not mix HTML and Markdown syntax anywhere.
-                    
-                    IMPORTANT INSTRUCTIONS FOR IMAGE PLACEMENT:
-                    - If images are provided, include placeholder markers like [INSERT_IMAGE_1_HERE], [INSERT_IMAGE_2_HERE], etc.
-                    - These simple placeholders will be replaced with actual images
-                    - Place these image placeholders at meaningful points throughout your document
-                    - Good places for images are after introductory paragraphs or to illustrate key concepts
-                    - Do not cluster all images together - spread them throughout different sections
-                    """
+Every single piece of content must be enclosed in appropriate HTML tags. Do not mix HTML and Markdown syntax anywhere."""
                 else:
-                    doc_template = f"""Create part {chunk_start//chunk_size + 1} of a comprehensive document about this topic in plain text format.
-                    
-            IMPORTANT INSTRUCTIONS FOR IMAGE PLACEMENT:
-            - If images are provided, include placeholder markers like IMAGE_{chunk_start + 1}, IMAGE_{chunk_start + 2}, etc.
-            - Place these markers at meaningful points throughout your document
-            - Do not cluster all images together - spread them throughout different sections."""
+                    doc_template = f"""Create part {chunk_start//chunk_size + 1} of a comprehensive document about this topic in plain text format."""
                 
                 # Build the chunk-specific prompt
                 prompt = f"""
@@ -926,6 +910,9 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
                             # If it's not already in an HTML tag, wrap it
                             lines[i] = f'<p>{line}</p>'
                     response = '\n'.join(lines)
+                
+                # Clean up any legacy [INSERT_IMAGE_X_HERE] placeholders that might appear
+                response = re.sub(r'\[INSERT_IMAGE_\d+_HERE\]', '', response)
             else:
                 console.print("❌ No content could be generated from any chunks.")
                 return 1  # Return error code
@@ -936,6 +923,10 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
             
             # Check if any IMAGE_ placeholders are in the document
             placeholders_found = len(re.findall(r'\bIMAGE_\d+\b', response))
+            
+            # Also check for [INSERT_IMAGE_X_HERE] pattern
+            insert_placeholders_found = len(re.findall(r'\[INSERT_IMAGE_\d+_HERE\]', response))
+            placeholders_found += insert_placeholders_found
             
             # If no placeholders found, use AI-powered image placement
             if placeholders_found == 0:

@@ -2,9 +2,14 @@
 
 All notable changes to the CLIche project will be documented in this file.
 
-## [Unreleased]
+## [Pre-Release Beta]
 
 ### Enhanced
+- 🧹 Improved placeholder cleanup in document generation
+  - Added specific cleanup for legacy image placeholder patterns
+  - Enhanced markdown document cleaning to remove all placeholder artifacts
+  - Ensured consistent cleanup across research, write, and generate commands
+  - Improved document quality with cleaner output
 - 🔄 Standardized image handling across research and write commands
   - Removed legacy image placeholder instructions in research command
   - Unified both commands to use AI-powered contextual image placement

@@ -931,6 +931,9 @@ def clean_markdown_document(content):
                 lines[i] = f'<p>{line}</p>'
         content = '\n'.join(lines)
     
+    # Remove any legacy [INSERT_IMAGE_X_HERE] placeholders
+    content = re.sub(r'\[INSERT_IMAGE_\d+_HERE\]', '', content)
+    
     return content
 
 def generate_summary_document(llm, raw_content, topic, format, image_data):
@@ -1404,6 +1407,9 @@ def process_images_in_content(content, format, image_data):
     """Process image placeholders in the content."""
     if not image_data["images"]:
         return content
+    
+    # Clean up any legacy [INSERT_IMAGE_X_HERE] placeholders that might appear
+    content = re.sub(r'\[INSERT_IMAGE_\d+_HERE\]', '', content)
     
     # Check if any IMAGE_ string appears at all in the document
     all_image_indicators = len(re.findall(r'IMAGE_\d+', content))

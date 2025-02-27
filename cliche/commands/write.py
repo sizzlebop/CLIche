@@ -152,6 +152,9 @@ async def async_write(prompt: tuple[str, ...], format: str, path: Optional[str],
         else:
             content = llm_response
             
+        # Clean up any legacy [INSERT_IMAGE_X_HERE] placeholders that might appear
+        content = re.sub(r'\[INSERT_IMAGE_\d+_HERE\]', '', content)
+        
         # Process images if we have any
         if image_data["images"] and (format == 'markdown' or format == 'html'):
             # Check if any IMAGE_ placeholders are in the document
