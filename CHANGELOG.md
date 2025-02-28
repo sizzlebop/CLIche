@@ -4,6 +4,13 @@ All notable changes to the CLIche project will be documented in this file.
 
 ## [Pre-Release Beta]
 
+### Added
+- 🎨 Unified `create` command for ASCII/ANSI art generation
+  - Consolidates functionality of art and ansi commands
+  - Added banner mode for creating text headers
+  - Improved font selection and display options
+  - Maintains backward compatibility with existing commands
+
 ### Fixed
 - 🔧 Improved Unsplash API key handling
   - Added multiple fallback methods for finding the API key

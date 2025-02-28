@@ -49,6 +49,7 @@
   - Generate ASCII text art with custom fonts
   - Display random ASCII art patterns
   - Display random ANSI art patterns
+  - Create banner-style text headers
 
 
 - ✨ **Base commands**:
@@ -56,6 +57,7 @@
   - `roastme`: Get roasted by the AI
   - `art`: Display random ASCII art patterns
   - `ansi`: Display random ANSI art patterns
+  - `create`: Unified command for ASCII/ANSI art creation
   - `view`: View a generated file
   - `config`: Configure your API keys and model settings
   - `config-manager`: Manage CLIche configuration files
@@ -180,7 +182,16 @@ cliche art "hello" - get a specific ASCII art pattern
 cliche ansi
 ```
 
-12. View a generated file:
+12. Create ASCII/ANSI art with the new unified command:
+```bash
+cliche create --ascii "Hello World"  # Create ASCII text art
+cliche create --ansi                 # Show random ANSI art  
+cliche create --banner "My Project"  # Create a banner-style header
+cliche create --list-fonts           # List available fonts
+cliche create "Cool Text"            # Default to ASCII art with text
+```
+
+13. View a generated file:
 ```bash
 cliche view my_file.md --format write
 cliche view game.py --format code
@@ -190,13 +201,13 @@ cliche view python_async_markdown.md --format docs --source scrape
 cliche view research_commands_in_linux.md
 ```
 
-13. Search for files:
+14. Search for files:
 ```bash
 cliche search -t py    # Find all Python files in your home directory
 cliche search -n "*.md" -l  # Find markdown files in current directory
 ```
 
-14. Work with images:
+15. Work with images:
 ```bash
 cliche image "mountain landscape" --list  # Search for images
 cliche image --download abcd1234  # Download a specific image
