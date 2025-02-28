@@ -5,6 +5,15 @@ All notable changes to the CLIche project will be documented in this file.
 ## [Pre-Release Beta]
 
 ### Added
+- 🖼️ Added AI-powered image generation to image command
+  - Integrated with OpenAI's DALL-E API
+  - Added support for Stability AI's image generation
+  - Implemented --generate option for existing image command
+  - Added provider selection and model selection
+  - Added style options specific to each provider
+  - Implemented proper error handling with helpful guidance
+  - Created dedicated configuration with --dalle-key and --stability-key
+  - Added automated image storage in ~/.cliche/files/images/
 - 🎨 Unified `create` command for ASCII/ANSI art generation
   - Consolidates functionality of art and ansi commands
   - Added banner mode for creating text headers
@@ -34,6 +43,12 @@ All notable changes to the CLIche project will be documented in this file.
   - Simplified image processing logic
   - Created consistent experience across all document generation commands
   - Improved document generation quality with better formatting
+- 🔄 Improved Python.org scraping with consistent styling and output
+  - Added blue crawl4ai initialization text for consistency across all sites
+  - Enhanced content extraction with crawl4ai integration
+  - Improved file naming with timestamped JSON files matching image directories
+  - Fixed error handling and fallback strategies for better reliability
+  - Added clear output messaging showing where files are saved
 
 ## [1.3.4] - 2024-08-02
 
