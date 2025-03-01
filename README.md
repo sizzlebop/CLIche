@@ -14,6 +14,8 @@
 
 ## Latest Features
 
+- 🖌️ **AI Image Generation**: Create images with DALL-E and Stability AI directly from the terminal
+- 🎨 **Creative Control**: Select models, styles, and quality settings for your generated images
 - 🤖 **AI-Powered Image Placement**: Intelligent contextual placement of images in documents based on content analysis
 - 🔍 **Multiple Search Engines**: Added Brave Search integration alongside DuckDuckGo for more reliable web research
 - 📂 **Automatic Unique File Naming**: Generate multiple documents on the same topic without overwriting previous files
@@ -44,7 +46,11 @@
 - 🔍 **Web Research**: Get up-to-date information from the web with `research` command
 - 🕸️ **Web Scraping**: Extract and save content from websites with `scrape` command
 - 📝 **Document Generation**: Create professional documents from scraped data
-- 🖼️ **Image Integration**: Beautiful images from Unsplash with direct URLs for better sharing and compatibility
+- 🖼️ **Image Features**:
+  - Search and download from Unsplash with direct URLs
+  - Generate AI images with DALL-E and Stability AI
+  - Set model, style, quality, and size preferences
+  - View all options with convenient --list-models and --list-styles
 - 🎨 **Art & ANSI support**:
   - Generate ASCII text art with custom fonts
   - Display random ASCII art patterns
@@ -77,32 +83,83 @@
 
 ## Installation
 
-### Quick Install
+Choose one of these methods:
+
+### Method 1: Automatic Installation Script (Recommended)
 
 ```bash
 # Clone the repository
-git clone https://github.com/pinkpixel-dev/cliche.git
+git clone https://github.com/sizzlebop/cliche.git
 cd cliche
 
 # Run the installation script
 ./install.sh
 ```
 
-### Manual Installation
+### Method 2: Manual Installation
 
 ```bash
-# Create a virtual environment (recommended)
+# Clone the repository
+git clone https://github.com/sizzlebop/cliche.git
+cd cliche
+
+# Create virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Install the package in development mode
+# Install package
 pip install -e .
 ```
 
-## Quick Start
+## Terminal Image Viewing Dependencies
+
+CLIche offers streamlined image viewing directly in your terminal with minimal output dialog. When generating or viewing images, the system:
+
+- Automatically detects the best viewing method for your terminal
+- Displays images with optimal sizing based on image dimensions and terminal size
+- Shows the image location without verbose technical details
+
+### Recommended Dependencies
+
+- **chafa 1.12.0+**: For best terminal image viewing quality, automatically installed when needed
+  - Ubuntu/Debian:
+    - Ubuntu 22.04 and earlier: `sudo add-apt-repository ppa:hpjansson/chafa && sudo apt-get update && sudo apt-get install chafa`
+    - Ubuntu 24.04 (Noble) and later: `sudo apt install chafa` (then compile from source for best results - see below)
+  - macOS: `brew install chafa`
+  - Fedora/RHEL: `sudo dnf copr enable hpjansson/chafa && sudo dnf install chafa`
+  - Arch Linux: `sudo pacman -S chafa`
+  - **Compile from source** (recommended for latest version with all features):
+    ```bash
+    # Install dependencies
+    sudo apt install -y build-essential automake libtool pkg-config libglib2.0-dev libmagickwand-dev libwebp-dev libavcodec-dev
+    
+    # Clone and build
+    git clone https://github.com/hpjansson/chafa.git
+    cd chafa
+    ./autogen.sh
+    make
+    sudo make install
+    ```
+
+For automatic installation of all image viewing dependencies:
+```bash
+./install_image_deps.sh
+```
+
+### Version Note
+- Using chafa version 1.12.0 or higher is **highly recommended** for proper image display
+- Older versions may display square images incorrectly (appearing stretched or split)
+- The latest version supports the `--pixel-aspect` option for proper aspect ratio adjustment
+- Ubuntu 24.04 (Noble) and newer versions may not support the PPA, so compiling from source is recommended
+
+## Usage
+
+### Configuration
+
+Before using CLIche, set up your provider and API key:
 
 1. Set up your API keys:
 ```bash
@@ -191,7 +248,26 @@ cliche create --list-fonts           # List available fonts
 cliche create "Cool Text"            # Default to ASCII art with text
 ```
 
-13. View a generated file:
+13. Generate AI images with DALL-E or Stability AI:
+```bash
+# Generate an image with DALL-E (default)
+cliche image "a colorful landscape with mountains and a lake" --generate
+
+# Specify a provider and model
+cliche image "a medieval castle on a hill at sunset" --generate --provider dalle --model dall-e-2
+
+# Customize style and size
+cliche image "a futuristic cityscape with flying cars" --generate --style natural --size 1024x1024
+
+# List available providers, models, and styles
+cliche image --list-providers
+cliche image --list-models dalle
+cliche image --list-styles dalle
+```
+
+Generated images are automatically displayed in your terminal with a clean, minimal interface. You'll see the file location and have options to view it again or open it with your system viewer.
+
+14. View a generated file:
 ```bash
 cliche view my_file.md --format write
 cliche view game.py --format code
@@ -201,13 +277,13 @@ cliche view python_async_markdown.md --format docs --source scrape
 cliche view research_commands_in_linux.md
 ```
 
-14. Search for files:
+15. Search for files:
 ```bash
 cliche search -t py    # Find all Python files in your home directory
 cliche search -n "*.md" -l  # Find markdown files in current directory
 ```
 
-15. Work with images:
+16. Work with images:
 ```bash
 cliche image "mountain landscape" --list  # Search for images
 cliche image --download abcd1234  # Download a specific image
@@ -368,6 +444,12 @@ cliche config --provider ollama --model llama3.2:8b
 
 # Configure Unsplash API for images
 cliche config --unsplash-key your_unsplash_api_key
+
+# Configure DALL-E for image generation
+cliche config --dalle-key your_dalle_api_key
+
+# Configure Stability AI for image generation
+cliche config --stability-key your_stability_api_key
 ```
 
 Your configuration is stored in `~/.config/cliche/config.json`.
@@ -437,7 +519,10 @@ CLIche organizes all generated files in a structured directory hierarchy:
 │   ├── write/         # Write command documents
 │   └── scrape/        # Documents from scraped content
 ├── code/              # Generated code files
-├── images/            # Downloaded images (when using image --download)
+├── images/            # Image storage directory
+│   ├── unsplash/      # Downloaded images from Unsplash
+│   ├── dalle/         # AI-generated images from DALL-E
+│   └── stability/     # AI-generated images from Stability AI
 └── scrape/            # Raw scraped data (JSON format)
 ```
 

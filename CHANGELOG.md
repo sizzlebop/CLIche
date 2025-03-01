@@ -28,6 +28,11 @@ All notable changes to the CLIche project will be documented in this file.
   - Cleaned up redundant entries in config file
 
 ### Enhanced
+- 🖼️ Streamlined image viewing experience
+  - Removed verbose output messages during image viewing/generation
+  - Added automatic image display after generation with minimal text
+  - Simplified error messages and suggestions
+  - Created a cleaner, more user-friendly interface
 - 🧹 Improved placeholder cleanup in document generation
   - Added specific cleanup for legacy image placeholder patterns
   - Enhanced markdown document cleaning to remove all placeholder artifacts
