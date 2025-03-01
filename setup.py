@@ -27,7 +27,13 @@ setup(
         'rich>=13.0.0',
         'art>=6.0',
         'pydantic>=2.0.0',
-        'python-unsplash>=1.1.0'
+        'python-unsplash>=1.1.0',
+        'Pillow>=10.0.0',  # For image processing
+        'python-magic>=0.4.27',  # For file type detection
+        # External system dependency (not listed here, install manually):
+        # chafa - terminal image viewer (recommended version 1.12.0+)
+        # Ubuntu/Debian: sudo add-apt-repository ppa:hpjansson/chafa && sudo apt update && sudo apt install chafa
+        # macOS: brew install chafa
     ],
     entry_points={
         'console_scripts': [

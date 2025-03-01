@@ -49,24 +49,61 @@ def get_docs_dir(source: Optional[Literal['write', 'research', 'scrape']] = None
     """Get the output directory for documents with optional source-specific subdirectory.
     
     Args:
-        source: Optional source of the document:
-            - 'write': Documents generated via the write command
-            - 'research': Documents generated via research --write
+        source: Optional source type for subdirectory organization
+            - 'write': Documents from the write command
+            - 'research': Documents from research command
             - 'scrape': Documents generated from scraped content
             
     Returns:
-        Path object for the docs directory or subdirectory
+        Path object for the documents directory
     """
     # First get the base docs directory
     docs_dir = get_output_dir('docs')
     
-    # If a source is specified, get/create the subdirectory
+    # If source is specified, create and return source-specific subdirectory
     if source:
-        subdir = docs_dir / source
-        subdir.mkdir(exist_ok=True)
-        return subdir
+        source_dir = docs_dir / source
+        source_dir.mkdir(exist_ok=True)
+        return source_dir
     
     return docs_dir
+
+def get_image_dir() -> Path:
+    """Get the directory for images.
+    
+    Returns:
+        Path object for the images directory
+    """
+    # Get user's home directory
+    home = Path.home()
+    
+    # Create base cliche directory
+    cliche_dir = home / 'cliche'
+    cliche_dir.mkdir(exist_ok=True)
+    
+    # Create files directory
+    files_dir = cliche_dir / 'files'
+    files_dir.mkdir(exist_ok=True)
+    
+    # Create images directory
+    images_dir = files_dir / 'images'
+    images_dir.mkdir(exist_ok=True)
+    
+    return images_dir
+
+def get_scraped_images_dir() -> Path:
+    """Get the directory for scraped images.
+    
+    Returns:
+        Path object for the scraped images directory
+    """
+    images_dir = get_image_dir()
+    
+    # Create scraped images directory
+    scraped_dir = images_dir / 'scraped'
+    scraped_dir.mkdir(exist_ok=True)
+    
+    return scraped_dir
 
 def save_code_to_file(content: str, path: str) -> None:
     """Save code content to a file."""

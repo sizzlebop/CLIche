@@ -38,7 +38,15 @@ class Config:
                     "openrouter": {"api_key": "", "model": "gpt-4-turbo-preview"}
                 },
                 "services": {
-                    "unsplash": {"api_key": ""}
+                    "unsplash": {"api_key": ""},
+                    "stability_ai": {"api_key": ""},
+                    "dalle": {"use_openai_key": False},
+                    "brave_search": {"api_key": ""}
+                },
+                "image_generation": {
+                    "default_provider": "dalle",  # Options: dalle, stability
+                    "default_size": "1024x1024",
+                    "default_quality": "standard"  # Options: standard, hd
                 }
             }
             self.save_config(default_config)
@@ -58,6 +66,22 @@ class Config:
             unsplash_key = self.config['services']['unsplash'].get('api_key')
             if unsplash_key:
                 os.environ['UNSPLASH_API_KEY'] = unsplash_key
+        
+        # Load Stability AI key if configured
+        if 'services' in self.config and 'stability_ai' in self.config['services']:
+            stability_key = self.config['services']['stability_ai'].get('api_key')
+            if stability_key:
+                os.environ['STABILITY_API_KEY'] = stability_key
+        
+        # Handle DALL-E configuration (uses OpenAI key)
+        if 'services' in self.config and 'dalle' in self.config['services']:
+            use_openai_key = self.config['services']['dalle'].get('use_openai_key')
+            if use_openai_key:
+                # Get the OpenAI key
+                openai_key = self.config.get('providers', {}).get('openai', {}).get('api_key')
+                if openai_key:
+                    # Make it available to DALL-E utilities
+                    os.environ['OPENAI_API_KEY'] = openai_key
 
     def save_config(self, config: Dict[str, Any]) -> None:
         """Save configuration to file."""

@@ -40,6 +40,14 @@ source venv/bin/activate
 pip install --upgrade pip
 pip install -e .
 
+# Install image viewing dependencies
+echo -e "${CYAN}🖼️ Setting up image viewing capabilities...${WHITE}"
+# Set flag to indicate we're running from the installer
+export CLICHE_INSTALLING=1
+chmod +x install_image_deps.sh
+./install_image_deps.sh
+unset CLICHE_INSTALLING
+
 # Create symlink to make cliche available system-wide
 echo -e "${CYAN}🔗 Creating system-wide symlink...${WHITE}"
 sudo ln -sf /opt/cliche/venv/bin/cliche /usr/local/bin/cliche

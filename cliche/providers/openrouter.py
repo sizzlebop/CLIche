@@ -68,8 +68,7 @@ class OpenRouterProvider(LLMBase):
             return [
                 ("deepseek/deepseek-r1:free"),
                 ("cognitivecomputations/dolphin3.0-r1-mistral-24b:free"),
-                ("meta-llama/llama-3.3-70b-instruct:free"),
-                ("mistralai/mistral-nemo:free"),
+                ("meta-llama/llama-3.3-70b-instruct:free"),                
                 ("asophosympatheia/rogue-rose-103b-v0.2:free"),
                 ("gryphe/mythomax-l2-13b:free"),
                 ("google/gemma-2-9b-it:free")

@@ -316,6 +316,92 @@ def format_scraped_data(data: list, topic: str) -> str:
     # Use enhanced content organization
     return merge_and_organize_content(data, topic)
 
+def load_scraped_data(topic: str) -> List[Dict[str, Any]]:
+    """Load scraped data from JSON files matching topic.
+    
+    Looks for both direct topic match and scraped_* files that might match.
+    """
+    # Normalize topic name for file search
+    normalized_topic = topic.replace(' ', '_').lower() 
+    
+    # Define search patterns
+    scrape_dir = Path(os.path.expanduser("~/cliche/files/scrape"))
+    pattern1 = f"{normalized_topic}.json"  # Direct match
+    pattern2 = f"scraped_{normalized_topic}.json"  # scraped_topic.json
+    pattern3 = f"scraped_*{normalized_topic}*.json"  # Any scraped_*topic* file
+    
+    # Find matching files
+    matching_files = []
+    
+    # Direct match
+    if (scrape_dir / pattern1).exists():
+        matching_files.append(scrape_dir / pattern1)
+    
+    # scraped_topic.json
+    if (scrape_dir / pattern2).exists():
+        matching_files.append(scrape_dir / pattern2)
+    
+    # Any scraped_*topic* file using glob
+    for file in scrape_dir.glob(pattern3):
+        if file not in matching_files:
+            matching_files.append(file)
+    
+    # Try to find any files with the topic keyword in the content
+    if not matching_files:
+        for file in scrape_dir.glob("*.json"):
+            try:
+                with open(file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    if normalized_topic in content.lower() or topic.lower() in content.lower():
+                        matching_files.append(file)
+            except Exception:
+                pass
+    
+    # Load data from all matching files
+    all_data = []
+    
+    for file in matching_files:
+        try:
+            with open(file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                
+                # Support both array of objects and single object
+                if isinstance(data, list):
+                    all_data.extend(data)
+                else:
+                    all_data.append(data)
+                    
+        except Exception as e:
+            print(f"Error loading data from {file}: {str(e)}")
+    
+    return all_data
+
+def process_scraped_images(data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Process scraped images into the format expected by process_images_in_content."""
+    # Check if the document has scraped images
+    if not data.get('images'):
+        return []
+        
+    # Convert scraped images to the expected format
+    processed_images = []
+    for img_data in data['images']:
+        # Skip images that don't have a local path
+        if not img_data.get('local_path'):
+            continue
+            
+        # Create image entry in the format expected by the document processor
+        processed_img = {
+            'url': f"file://{img_data['local_path']}",  # Use local file URL
+            'alt_text': img_data.get('alt_text', 'Scraped image'),
+            'caption': img_data.get('caption', ''),
+            'position_index': img_data.get('position_index', 0),
+            'source': img_data.get('source_url', '')
+        }
+        
+        processed_images.append(processed_img)
+        
+    return processed_images
+
 @click.command()
 @click.argument("topic")
 @click.option("--format", "-f", 
@@ -332,9 +418,11 @@ def format_scraped_data(data: list, topic: str) -> str:
 @click.option("--image-width", default=800, help='Width of images', type=int)
 @click.option("--summarize", "-s", is_flag=True, 
               help="Generate a summary instead of comprehensive content")
+@click.option("--use-scraped-images", is_flag=True,
+              help="Include images that were scraped from the original content")
 def generate(topic: str, format: str, path: Optional[str], raw: bool = False,
             image: Optional[str] = None, image_count: int = 3, image_width: int = 800,
-            summarize: bool = False):
+            summarize: bool = False, use_scraped_images: bool = False):
     """Generate a document from previously scraped content.
     
     This command processes content from the scrape directory for a specified topic,
@@ -345,83 +433,80 @@ def generate(topic: str, format: str, path: Optional[str], raw: bool = False,
     from ..core import get_llm
     from ..utils.unsplash import UnsplashAPI, format_image_for_markdown, format_image_for_html, get_photo_credit
     
-    console.print(f"[bold]Generating document for topic:[/bold] {topic}")
+    console.print(f"[bold cyan]Generating document for topic: {topic}[/bold cyan]")
     
-    # Load scraped data
-    scrape_dir = Path(SCRAPE_OUTPUT_DIR)
-    topic_filename = topic.replace(" ", "_").lower() + '.json'
-    topic_file = scrape_dir / topic_filename
-    topic_dir = scrape_dir / topic.replace(" ", "_").lower()
-    
-    # First try to load from a file with the topic name
-    scraped_data = []
-    if topic_file.exists() and topic_file.is_file():
-        try:
-            with open(topic_file, "r") as f:
-                data = json.load(f)
-                if isinstance(data, list):
-                    scraped_data = data
-                else:
-                    scraped_data = [data]
-            console.print(f"[bold green]Found:[/bold green] Data in {topic_file}")
-        except Exception as e:
-            console.print(f"[bold yellow]Warning:[/bold yellow] Failed to load {topic_file}: {str(e)}")
-    
-    # If no data found yet, try looking in a directory
-    if not scraped_data and topic_dir.exists() and topic_dir.is_dir():
-        for file_path in topic_dir.glob("*.json"):
-            try:
-                with open(file_path, "r") as f:
-                    data = json.load(f)
-                    scraped_data.append(data)
-            except Exception as e:
-                console.print(f"[bold yellow]Warning:[/bold yellow] Failed to load {file_path}: {str(e)}")
-        if scraped_data:
-            console.print(f"[bold green]Found:[/bold green] {len(scraped_data)} data files in {topic_dir}")
+    # Load all matching data
+    scraped_data = load_scraped_data(topic)
     
     if not scraped_data:
-        console.print(f"[bold red]Error:[/bold red] No data found for topic '{topic}'")
-        console.print(f"Run [cyan]cliche scrape URL --topic \"{topic}\"[/cyan] first to collect data.")
+        console.print(f"[bold red]Error:[/bold red] No scraped data found for topic: {topic}")
+        console.print("Try using the [bold yellow]scrape command[/bold yellow] first: cliche scrape URL --topic \"Your Topic\"")
         return
-
-    console.print(f"[bold green]Found:[/bold green] {len(scraped_data)} data files for topic '{topic}'")
     
-    # Initialize image data dictionary
+    console.print(f"[green]Found {len(scraped_data)} sources for {topic}[/green]")
+    
+    # Prepare image data
     image_data = {"images": [], "credits": []}
     
-    # Fetch images if requested
-    if image and format in ['markdown', 'html']:
+    # Add scraped images if requested
+    if use_scraped_images:
+        scraped_images = []
+        
+        # Process images from all scraped data
+        for data_item in scraped_data:
+            if isinstance(data_item, dict) and 'images' in data_item:
+                scraped_images.extend(process_scraped_images(data_item))
+                
+        if scraped_images:
+            console.print(f"[green]Including {len(scraped_images)} scraped images[/green]")
+            image_data["images"].extend(scraped_images)
+            
+            # Add generic credit for scraped images
+            image_data["credits"].append({
+                "text": "Images scraped from original sources",
+                "url": ""
+            })
+    
+    # Fetch Unsplash images if requested
+    if image:
         try:
+            # Import here to avoid circular imports
+            from ..utils.unsplash import UnsplashAPI
             unsplash = UnsplashAPI()
             
             # Search for images by term
             console.print(f"🔍 Searching for '{image}' images...")
             results = unsplash.search_photos(image, per_page=image_count)
             
-            # Check if we have results
-            photos = results.get('results', [])
-            if not photos:
+            if not results or not results.get('results'):
                 console.print("❌ No images found for this search term.")
             else:
-                # Process each image
-                for i, photo in enumerate(photos[:image_count]):
-                    photo_id = photo.get('id')
-                    console.print(f"🖼️ Getting image {i+1}/{min(image_count, len(photos))}...")
+                # Process each result
+                for i, photo in enumerate(results['results']):
+                    if i >= image_count:
+                        break
+                        
+                    photo_id = photo['id']
+                    photo_url = photo['urls']['regular']
+                    photographer = photo['user']['name']
+                    photographer_url = photo['user']['links']['html']
+                    alt_text = photo.get('alt_description') or image
                     
-                    try:
-                        photo_data = unsplash.get_photo_url(photo_id, width=image_width)
-                        
-                        # Add to image data
-                        image_data["images"].append({
-                            "url": photo_data["url"],
-                            "alt_text": photo_data["alt_text"],
-                            "width": image_width
-                        })
-                        image_data["credits"].append(get_photo_credit(photo, format))
-                        
-                    except Exception as e:
-                        console.print(f"⚠️ Error getting image: {str(e)}")
-            
+                    # Add to image data
+                    image_data["images"].append({
+                        "id": photo_id,
+                        "url": photo_url,
+                        "alt_text": alt_text,
+                        "photographer": photographer,
+                        "photographer_url": photographer_url
+                    })
+                    
+                # Add Unsplash credit
+                image_data["credits"].append({
+                    "text": "Photos provided by Unsplash",
+                    "url": "https://unsplash.com/"
+                })
+                
         except Exception as e:
             console.print(f"⚠️ Error fetching images: {str(e)}")
             console.print("Continuing without images...")

@@ -22,6 +22,15 @@ duckduckgo-search>=2.8.6
 rich>=13.0.0
 mdformat>=0.7.0
 
+# Image processing 
+Pillow>=10.0.0
+python-magic>=0.4.27  # For file type detection
+
+# System dependencies (install manually)
+# chafa  # Terminal image viewer (recommended)
+#        # Install with 'sudo apt install chafa' (Ubuntu/Debian)
+#        # or 'brew install chafa' (macOS)
+
 # Development dependencies
 black>=23.0.0
 pytest>=7.0.0

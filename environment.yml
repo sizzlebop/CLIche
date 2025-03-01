@@ -27,3 +27,10 @@ dependencies:
     - python-dotenv>=1.0.0
     - asyncio>=3.4.3
     - python-unsplash>=1.1.0
+
+# System dependencies (not handled by conda):
+# chafa - terminal image viewer (recommended version 1.12.0+)
+# Install with: 
+#   Ubuntu/Debian: sudo add-apt-repository ppa:hpjansson/chafa && sudo apt update && sudo apt install chafa
+#   macOS: brew install chafa
+#   Fedora/RHEL: sudo dnf copr enable hpjansson/chafa && sudo dnf install chafa
