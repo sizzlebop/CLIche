@@ -18,6 +18,25 @@ class LLMProvider(str, Enum):
     DEEPSEEK = "deepseek"
     OPENROUTER = "openrouter"
 
+def get_provider_class(provider_name: str):
+    """Get a provider class by name."""
+    provider_name = provider_name.lower()
+    
+    if provider_name == LLMProvider.OPENAI.value:
+        return OpenAIProvider
+    elif provider_name == LLMProvider.ANTHROPIC.value:
+        return AnthropicProvider
+    elif provider_name == LLMProvider.GOOGLE.value:
+        return GoogleProvider
+    elif provider_name == LLMProvider.OLLAMA.value:
+        return OllamaProvider
+    elif provider_name == LLMProvider.DEEPSEEK.value:
+        return DeepSeekProvider
+    elif provider_name == LLMProvider.OPENROUTER.value:
+        return OpenRouterProvider
+    else:
+        return None
+
 __all__ = [
     'LLMBase', 
     'LLMProvider', 
@@ -26,5 +45,6 @@ __all__ = [
     'GoogleProvider', 
     'OllamaProvider', 
     'DeepSeekProvider', 
-    'OpenRouterProvider'
+    'OpenRouterProvider',
+    'get_provider_class'
 ]

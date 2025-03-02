@@ -528,6 +528,106 @@ CLIche organizes all generated files in a structured directory hierarchy:
 
 When multiple documents are generated with the same topic or filename, CLIche automatically adds incremental suffixes (_1, _2, etc.) to prevent overwriting existing files.
 
+## Image Scraping
+
+CLIche provides a powerful image extraction system through the `ImageExtractor` class. This component can extract, download, and organize images from web pages.
+
+### Basic Usage
+
+```python
+from cliche.scraping.extractors.image_extractor import ImageExtractor
+from pathlib import Path
+import asyncio
+
+async def extract_images():
+    extractor = ImageExtractor()
+    images = await extractor.extract_images(
+        html_content=html,  # HTML content as string
+        base_url="https://example.com",  # Base URL for resolving relative paths
+        max_images=10,  # Maximum number of images to extract
+        min_size=100,  # Minimum image size in pixels (width or height)
+        output_dir=Path("./images"),  # Directory to save images
+        topic="my-topic"  # Optional topic for organizing images
+    )
+    
+    # Print image information
+    for image in images:
+        print(f"URL: {image.url}")
+        print(f"Caption: {image.caption}")
+        print(f"Local path: {image.local_path}")
+        print(f"Dimensions: {image.width}x{image.height}")
+        print()
+
+# Run the async function
+asyncio.run(extract_images())
+```
+
+### Key Features
+
+- **Intelligent Caption Extraction**: Extracts captions from figcaption tags, alt text, aria-labels, and title attributes
+- **Size Filtering**: Filter images by minimum width or height
+- **Smart Organization**: Images can be organized by topic
+- **Asynchronous Download**: High-performance downloads using aiohttp
+- **Metadata Extraction**: Extracts width, height, alt text, and other metadata
+
+### Legacy API
+
+For backwards compatibility, the original `image_scraper.py` module is still available:
+
+```python
+from cliche.utils.image_scraper import extract_and_download_images
+
+images = extract_and_download_images(
+    html_content=html,
+    base_url="https://example.com",
+    max_images=10,
+    min_size=100,
+    output_dir=Path("./images")
+)
+```
+
+See the [Migration Guide](docs/migration_guide.md) for more details on migrating to the new API.
+
+## Features
+
+### Web Scraping & Content Extraction
+
+CLIche provides powerful web content extraction through the `scrape` command:
+
+```bash
+# Basic scraping
+cliche scrape https://en.wikipedia.org/wiki/Machine_learning
+
+# Topic-focused scraping with images
+cliche scrape https://en.wikipedia.org/wiki/Python_(programming_language) --topic "Python Language" --images
+
+# Deep crawling with multiple pages
+cliche scrape https://docs.python.org/3/library/asyncio.html --depth 2 --max-pages 5
+```
+
+The scraped content is saved as structured JSON data that can be used by other commands or your own applications.
+
+### Document Generation
+
+Generate comprehensive documents from scraped content:
+
+```bash
+# Generate from scraped data matching a topic
+cliche generate "Python Language"
+
+# Generate in RST format
+cliche generate "Machine Learning" --format rst
+```
+
+### Specialized Extractors
+
+CLIche includes specialized content extractors for:
+- Wikipedia articles
+- Python.org documentation
+- General websites
+
+Each extractor is optimized for the specific structure of its target site, providing better extraction quality.
+
 ---
 Made with ❤️ by Pink Pixel;
 Dream it, Pixel it ✨

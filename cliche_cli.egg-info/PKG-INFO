@@ -1,6 +1,7 @@
 Metadata-Version: 2.2
 Name: cliche-cli
 Version: 0.2.0
+License-File: LICENSE
 Requires-Dist: click>=8.0.0
 Requires-Dist: openai>=1.0.0
 Requires-Dist: anthropic>=0.7.0
@@ -19,5 +20,10 @@ Requires-Dist: black>=23.0.0
 Requires-Dist: pytest>=7.0.0
 Requires-Dist: pytest-asyncio>=0.21.0
 Requires-Dist: duckduckgo-search>=2.8.6
-Requires-Dist: requests>=2.28.0
+Requires-Dist: rich>=13.0.0
+Requires-Dist: art>=6.0
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: python-unsplash>=1.1.0
+Requires-Dist: Pillow>=10.0.0
+Requires-Dist: python-magic>=0.4.27
 Dynamic: requires-dist

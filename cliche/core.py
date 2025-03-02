@@ -7,7 +7,10 @@ import click
 from pathlib import Path
 from enum import Enum
 from typing import Optional, Dict, Any
+import logging
 
+from .providers import get_provider_class
+from .providers.base import LLMBase
 from .providers.openai import OpenAIProvider
 from .providers.anthropic import AnthropicProvider
 from .providers.google import GoogleProvider
@@ -114,29 +117,27 @@ def get_llm():
     return cliche.provider
 
 class CLIche:
-    def __init__(self):
+    def __init__(self, config_path=None):
+        """Initialize CLIche with config."""
+        self.logger = logging.getLogger(__name__)
         self.config = Config()
-        self.provider = self._get_provider()
-
-    def _get_provider(self):
-        """Get the configured LLM provider."""
-        provider_name = self.config.config.get("provider", "openai").lower()
-        provider_config = self.config.get_provider_config(provider_name)
-
-        if provider_name == LLMProvider.OPENAI:
-            return OpenAIProvider(provider_config)
-        elif provider_name == LLMProvider.ANTHROPIC:
-            return AnthropicProvider(provider_config)
-        elif provider_name == LLMProvider.GOOGLE:
-            return GoogleProvider(provider_config)
-        elif provider_name == LLMProvider.OLLAMA:
-            return OllamaProvider(provider_config)
-        elif provider_name == LLMProvider.DEEPSEEK:
-            return DeepSeekProvider(provider_config)
-        elif provider_name == LLMProvider.OPENROUTER:
-            return OpenRouterProvider(provider_config)
+        
+        # Load the provider
+        provider_name = self.config.config.get("provider", "ollama")
+        
+        # Get the provider class (loaded on demand)
+        provider_class = get_provider_class(provider_name)
+        
+        if provider_class:
+            try:
+                self.provider = provider_class(self.config)
+                self.logger.info(f"Initialized provider: {provider_name}")
+            except Exception as e:
+                self.logger.error(f"Failed to initialize provider {provider_name}: {str(e)}")
+                self.provider = None
         else:
-            raise ValueError(f"Unknown provider: {provider_name}")
+            self.logger.error(f"Provider {provider_name} not available")
+            self.provider = None
 
     def _should_include_system_info(self, query: str) -> bool:
         """Determine if system information should be included based on query content."""

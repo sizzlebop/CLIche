@@ -4,6 +4,8 @@ All notable changes to the CLIche project will be documented in this file.
 
 ## [Pre-Release Beta]
 
+## [1.4.0] - 2025-02-28
+
 ### Added
 - 🖼️ Added AI-powered image generation to image command
   - Integrated with OpenAI's DALL-E API
@@ -55,7 +57,7 @@ All notable changes to the CLIche project will be documented in this file.
   - Fixed error handling and fallback strategies for better reliability
   - Added clear output messaging showing where files are saved
 
-## [1.3.4] - 2024-08-02
+## [1.3.4] - 2025-02-27
 
 ### Enhanced
 - 🖼️ Added AI-powered contextual image placement across all document commands
@@ -65,7 +67,7 @@ All notable changes to the CLIche project will be documented in this file.
   - Added fallback to evenly distributed placement when LLM suggestions unavailable
   - Replaced confusing error messages with more user-friendly notifications
 
-## [1.3.3] - 2024-08-01
+## [1.3.3] - 2025-02-27
 
 ### Fixed
 - 🔧 Fixed primary web crawler functionality in research command
@@ -75,7 +77,7 @@ All notable changes to the CLIche project will be documented in this file.
   - Better fallback behavior when primary extraction fails
 - 🧩 Added crawler method detection to adapt to different `crawl4ai` versions
 
-## [1.3.1] - 2024-07-20
+## [1.3.2] - 2025-02-26
 
 ### Enhanced
 - 🖼️ Improved image handling in documents with direct Unsplash URLs
@@ -89,7 +91,7 @@ All notable changes to the CLIche project will be documented in this file.
 - 🔄 Modified image processing to use direct Unsplash URLs in documents instead of downloading
 - 🧩 Removed non-standard markdown syntax for better compatibility
 
-## [1.3.2] - 2024-07-27
+## [1.3.1] - 2025-02-26
 
 ### Enhanced
 - 🔍 Improved `research` command with cleaner extraction messages
@@ -115,7 +117,7 @@ All notable changes to the CLIche project will be documented in this file.
   - Ensures proper spacing before and after code blocks
   - Improves instructions to LLM for better code block formatting
 
-## [1.3.0] - 2024-07-15
+## [1.3.0] - 2025-02-25
 
 ### Added
 - 🖼️ New `image` command for Unsplash integration
@@ -141,7 +143,7 @@ All notable changes to the CLIche project will be documented in this file.
 - 🧩 Modified document generation to support image placeholders
 - 📦 Enhanced file storage organization to include images directory
 
-## [1.2.0] - 2023-06-15
+## [1.2.0] - 2025-02-25
 
 ### Added
 - ✨ New `research` command for web search integration
@@ -193,7 +195,7 @@ All notable changes to the CLIche project will be documented in this file.
 - 🛡️ Improved error handling for web requests
 - 🔒 Rate limiting to prevent API abuse
 
-## [1.1.0] - 2023-03-10
+## [1.1.0] - 2025-02-24
 
 ### Added
 - 🎨 ASCII art generation with custom fonts
@@ -212,7 +214,7 @@ All notable changes to the CLIche project will be documented in this file.
 - 🔧 Output formatting issues in certain terminals
 - 📄 File saving with special characters in filenames
 
-## [1.0.0] - 2023-01-15
+## [1.0.0] - 2025-02-24
 
 ### Added
 - 🚀 Initial release with core functionality
@@ -233,7 +235,7 @@ All notable changes to the CLIche project will be documented in this file.
 - ⚙️ Configuration management
 - 📁 File organization for generated content
 
-## [1.2.1] - 2025-02-25
+## [1.2.1] - 2025-02-24
 
 ### Added
 - 🔍 Re-implemented `search` command for finding files on your computer
@@ -242,6 +244,31 @@ All notable changes to the CLIche project will be documented in this file.
   - Support for hidden files and depth control
   - Uses fast fd-find when available with fallback to find command
   - Improved cross-platform support
+
+## [0.3.0] - 2025-03-01
+
+### ✨ Added
+- Completely redesigned image extraction system with modular architecture
+- New `ImageExtractor` class for robust image extraction and downloading
+- Specialized extractors for Wikipedia and Python.org documentation
+- Crawling system with depth and multi-page support
+- Content relevance filtering based on topic
+- Proper separation of scraping and document generation
+- Detailed console output for scraping operations
+- Improved error handling and fallback mechanisms
+
+### 🔄 Changed
+- Separated scrape and generate commands for better separation of concerns
+- Improved image organization by topic and domain
+- Enhanced backward compatibility layer for image_scraper
+- Better logging and debug information
+- Updated crawler configuration for compatibility with latest crawl4ai
+
+### 🐛 Fixed
+- Fixed import issues in extractors
+- Resolved parameter mismatches in extractor methods
+- Fixed image download and path handling
+- Addressed crawl4ai API compatibility issues
 
 ---
 

@@ -14,7 +14,8 @@ from .server import servers
 from .system import system
 from .view import view
 from .write import write
-from .research import research  # Keep this here!
+from .research import research
+from .create import create
 
 __all__ = [
     'ansi',
@@ -31,4 +32,5 @@ __all__ = [
     'view',
     'write',
     'research',
+    'create',
 ]

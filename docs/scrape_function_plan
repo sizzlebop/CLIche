@@ -1,0 +1,80 @@
+## Updated Image Scraping Integration Plan
+
+- [x] **Create New Image Extractor Module**
+  - Created `cliche/scraping/extractors/image_extractor.py`
+  - Implemented `ImageExtractor` class with async methods
+  - Added proper error handling and logging
+  - Implemented image metadata extraction
+
+- [x] **Test Suite Creation**
+  - Created `tests/scraping/test_image_extractor.py`
+  - Implemented unit tests for core functionality
+  - Created mock tests for async operations
+  - All tests are now passing
+
+- [x] **Update Core Extractors**
+  - Updated `GeneralExtractor` to use new `ImageExtractor`
+  - Updated `WikipediaExtractor` to use new `ImageExtractor`
+  - Updated `PythonDocsExtractor` to use new `ImageExtractor`
+  - Created tests for extractors
+  - Fixed parameter name consistency
+
+- [x] **Create Compatibility Layer**
+  - Updated `image_scraper.py` to use `ImageExtractor` internally
+  - Added deprecation warnings for direct usage
+  - Ensured backward compatibility for existing code
+
+- [x] **Documentation Updates**
+  - Created migration guide (`docs/migration_guide.md`)
+  - Updated README with new architecture details
+  - Provided examples for using the new modules
+
+- [x] **Integration Testing**
+  - Tested with real websites (Wikipedia successfully)
+  - Verified extraction with HTML-based sites
+  - Identified limitations with JavaScript-heavy sites
+  
+- [x] **Separation of Concerns**
+  - Separated scraping and document generation
+  - Removed document generation from scrape command
+  - Improved clarity of command responsibilities
+  - Enhanced console output with stats
+
+### Future Enhancements
+
+1. **Dynamic Website Support**
+   - Integrate with browser automation (Selenium/Playwright)
+   - Add support for JavaScript rendering
+   - Implement scrolling simulation for lazy-loaded images
+   - Extract CSS background images
+
+2. **Performance Improvements**
+   - Implement parallel processing for large sites
+   - Add caching for repeated requests
+   - Create adaptive strategies based on site structure
+
+3. **Advanced Features**
+   - Add content-based image filtering
+   - Implement OCR for image text extraction
+   - Create smart cropping for image previews
+
+### Specialized Extractors Plan
+
+1. Implement specialized extractors for:
+   - GitHub Documentation
+   - Hugging Face Documentation 
+   - GitBooks-style sites
+   - Medium articles
+
+2. Implement a Reddit parser with:
+   - Post extraction
+   - Comment hierarchy
+   - Media embedding
+   - User information
+
+### Next Steps
+
+1. Focus on specialized extractors
+2. Implement Reddit parser
+3. Research browser automation integration for dynamic sites
+4. Improve error handling and retry logic

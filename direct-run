@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# CLIche Direct Runner - Bypass Cursor Python environment issues
+# This script directly calls the Python interpreter from the system path
+
+# Use the system Python, not Cursor's Python
+SYSTEM_PYTHON=$(which python3)
+
+# Print header
+echo -e "\n🚀 CLIche Direct Runner (System Python)"
+echo -e "────────────────────────────────────"
+echo -e "Using Python at: $SYSTEM_PYTHON\n"
+
+# Set up Python path to include the current directory
+export PYTHONPATH="$(pwd):$PYTHONPATH"
+
+# Get command and arguments
+CMD=$1
+shift
+
+# Execute specific command
+case "$CMD" in
+  "scrape")
+    URL=$1
+    TOPIC=$2
+    shift 2
+    if [[ "$TOPIC" == --* ]]; then
+      # If TOPIC starts with --, it's an option not a topic
+      set -- "$TOPIC" "$@"
+      TOPIC=""
+    fi
+    
+    # Run the command
+    $SYSTEM_PYTHON -c "
+import sys
+sys.path.insert(0, '$(pwd)')
+from cliche.commands.scrape import scrape
+import click
+args = ['$URL']
+if '$TOPIC': 
+    args.append('$TOPIC')
+options = {}
+# Parse remaining options
+for i in range(0, len(sys.argv)-1, 2):
+    if sys.argv[i].startswith('--'):
+        option = sys.argv[i][2:].replace('-', '_')
+        value = sys.argv[i+1]
+        options[option] = value
+# Invoke the command
+ctx = click.Context(scrape)
+ctx.invoke(scrape, url='$URL', topic='$TOPIC' if '$TOPIC' else None, **options)
+" "$@"
+    ;;
+    
+  "generate")
+    TOPIC=$1
+    shift
+    # Run the command
+    $SYSTEM_PYTHON -c "
+import sys
+sys.path.insert(0, '$(pwd)')
+from cliche.utils.generate_from_scrape import generate
+import click
+ctx = click.Context(generate)
+ctx.invoke(generate, topic='$TOPIC')
+" "$@"
+    ;;
+    
+  *)
+    echo "❌ Command not supported: $CMD"
+    echo "Supported commands: scrape, generate"
+    exit 1
+    ;;
+esac 

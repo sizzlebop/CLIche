@@ -1,93 +1,225 @@
 """
 Image scraping utilities for CLIche.
 Handles extracting and downloading images from web pages.
+DEPRECATED: This module is maintained for backward compatibility.
+Use cliche.scraping.extractors.image_extractor.ImageExtractor instead.
 """
 import os
 import re
 import asyncio
 import aiohttp
 import hashlib
+import warnings
+import logging
 import requests
-from typing import List, Dict, Optional, Tuple, Set, Any
+from typing import List, Dict, Optional, Tuple, Set, Any, Union
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
+from pydantic import BaseModel
 
-from .file import get_image_dir
+# Import the ImageExtractor with relative imports to avoid circular dependencies
+from ..scraping.extractors.image_extractor import ImageExtractor
 
-class ScrapedImage:
-    """Represents an image extracted from a web page."""
-    
-    def __init__(self, url: str, alt_text: str = "", caption: str = "", 
-                 width: Optional[int] = None, height: Optional[int] = None,
-                 position_index: int = 0, source_url: str = ""):
-        """Initialize a scraped image.
-        
-        Args:
-            url: Image URL
-            alt_text: Alt text from the image tag
-            caption: Caption text (from figcaption or similar elements)
-            width: Image width in pixels if known
-            height: Image height in pixels if known
-            position_index: Relative position in the document (for ordering)
-            source_url: URL of the page containing the image
-        """
-        self.url = url
-        self.alt_text = alt_text or "Scraped image"
-        self.caption = caption
-        self.width = width
-        self.height = height
-        self.position_index = position_index
-        self.source_url = source_url
-        self.local_path: Optional[Path] = None
-        self.file_type: Optional[str] = None
-    
-    def get_filename(self) -> str:
-        """Generate a consistent filename based on the image URL."""
-        # Extract the original filename from the URL if possible
-        parsed_url = urlparse(self.url)
-        original_filename = os.path.basename(parsed_url.path)
-        
-        # If the original filename has a recognizable extension, use it
-        if re.match(r'.*\.(jpg|jpeg|png|gif|webp|svg)$', original_filename, re.IGNORECASE):
-            return original_filename
-        
-        # Otherwise, create a hash-based filename with the extension from content-type
-        url_hash = hashlib.md5(self.url.encode()).hexdigest()[:10]
-        ext = self.file_type or 'jpg'  # Default to jpg if file type unknown
-        return f"image_{url_hash}.{ext}"
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Define ScrapedImage to maintain backward compatibility
+class ScrapedImage(BaseModel):
+    """Model for a scraped image."""
+    url: str
+    alt_text: str = ""
+    caption: str = ""
+    width: Optional[int] = None
+    height: Optional[int] = None
+    position_index: int = 0
+    source_url: str = ""
+    local_path: Optional[str] = None
+    file_type: Optional[str] = None
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for serialization."""
+        """Convert to dictionary."""
         return {
-            "url": self.url,
-            "alt_text": self.alt_text,
-            "caption": self.caption,
-            "width": self.width,
-            "height": self.height,
-            "position_index": self.position_index,
-            "source_url": self.source_url,
-            "local_path": str(self.local_path) if self.local_path else None,
-            "file_type": self.file_type
+            'url': self.url,
+            'alt': self.alt_text,
+            'caption': self.caption,
+            'width': self.width,
+            'height': self.height,
+            'position': self.position_index,
+            'source': self.source_url,
+            'local_path': self.local_path,
+            'file_type': self.file_type
         }
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ScrapedImage':
-        """Create a ScrapedImage from a dictionary."""
-        image = cls(
-            url=data["url"],
-            alt_text=data.get("alt_text", ""),
-            caption=data.get("caption", ""),
-            width=data.get("width"),
-            height=data.get("height"),
-            position_index=data.get("position_index", 0),
-            source_url=data.get("source_url", "")
-        )
-        if data.get("local_path"):
-            image.local_path = Path(data["local_path"])
-        image.file_type = data.get("file_type")
-        return image
 
+# Make deprecation warnings more visible
+warnings.filterwarnings("always", category=DeprecationWarning)
+
+async def extract_images_async(
+    html_content: str,
+    base_url: str,
+    max_images: int = 10,
+    min_size: int = 100,
+    include_metadata: bool = True
+) -> List[ScrapedImage]:
+    """
+    Extract images from HTML content asynchronously.
+    
+    DEPRECATED: Use cliche.scraping.extractors.image_extractor.ImageExtractor instead.
+    
+    Args:
+        html_content: HTML content to extract images from
+        base_url: Base URL for resolving relative URLs
+        max_images: Maximum number of images to extract
+        min_size: Minimum width/height in pixels
+        include_metadata: Whether to include metadata
+        
+    Returns:
+        List of ScrapedImage objects
+    """
+    # Ensure the warning is displayed by using a module-level warning
+    warnings.warn(
+        "extract_images_async is deprecated. Use cliche.scraping.extractors.image_extractor.ImageExtractor instead.",
+        DeprecationWarning, 
+        stacklevel=2
+    )
+    
+    # Use new ImageExtractor
+    extractor = ImageExtractor()
+    images = await extractor.extract_images(
+        html_content=html_content,
+        base_url=base_url,
+        max_images=max_images,
+        min_size=min_size,
+        output_dir=None  # Don't save images yet
+    )
+    
+    # Convert to old format if needed
+    if isinstance(images[0], Dict):
+        return [ScrapedImage(**img) for img in images]
+    return images
+
+async def extract_and_download_images_async(
+    html_content: str,
+    base_url: str,
+    max_images: int = 10,
+    min_size: int = 100,
+    output_dir: Optional[Path] = None,
+    topic: Optional[str] = None
+) -> List[ScrapedImage]:
+    """
+    Extract and download images from HTML content asynchronously.
+    
+    DEPRECATED: Use cliche.scraping.extractors.image_extractor.ImageExtractor instead.
+    
+    Args:
+        html_content: HTML content to extract images from
+        base_url: Base URL for resolving relative URLs
+        max_images: Maximum number of images to extract
+        min_size: Minimum width/height in pixels
+        output_dir: Directory to save images to
+        topic: Optional topic for organizing images
+        
+    Returns:
+        List of ScrapedImage objects with local_path set
+    """
+    warnings.warn(
+        "extract_and_download_images_async is deprecated. Use cliche.scraping.extractors.image_extractor.ImageExtractor instead.",
+        DeprecationWarning, 
+        stacklevel=2
+    )
+    
+    # Use new ImageExtractor
+    extractor = ImageExtractor()
+    images = await extractor.extract_images(
+        html_content=html_content,
+        base_url=base_url,
+        max_images=max_images,
+        min_size=min_size,
+        output_dir=output_dir,
+        topic=topic
+    )
+    
+    # Convert to old format if needed
+    if images and isinstance(images[0], Dict):
+        return [ScrapedImage(**img) for img in images]
+    return images
+
+def extract_images(
+    html_content: str,
+    base_url: str,
+    max_images: int = 10,
+    min_size: int = 100,
+    include_metadata: bool = True
+) -> List[ScrapedImage]:
+    """
+    Extract images from HTML content (synchronous wrapper).
+    
+    DEPRECATED: Use cliche.scraping.extractors.image_extractor.ImageExtractor instead.
+    
+    Args:
+        html_content: HTML content to extract images from
+        base_url: Base URL for resolving relative URLs
+        max_images: Maximum number of images to extract
+        min_size: Minimum width/height in pixels
+        include_metadata: Whether to include metadata
+        
+    Returns:
+        List of ScrapedImage objects
+    """
+    warnings.warn(
+        "extract_images is deprecated. Use cliche.scraping.extractors.image_extractor.ImageExtractor instead.",
+        DeprecationWarning, 
+        stacklevel=2
+    )
+    
+    # Run the async function in a new event loop
+    return asyncio.run(extract_images_async(
+        html_content=html_content,
+        base_url=base_url,
+        max_images=max_images,
+        min_size=min_size,
+        include_metadata=include_metadata
+    ))
+
+def extract_and_download_images(
+    html_content: str,
+    base_url: str,
+    max_images: int = 10,
+    min_size: int = 100,
+    output_dir: Optional[Path] = None,
+    topic: Optional[str] = None
+) -> List[ScrapedImage]:
+    """
+    Extract and download images from HTML content (synchronous wrapper).
+    
+    DEPRECATED: Use cliche.scraping.extractors.image_extractor.ImageExtractor instead.
+    
+    Args:
+        html_content: HTML content to extract images from
+        base_url: Base URL for resolving relative URLs
+        max_images: Maximum number of images to extract
+        min_size: Minimum width/height in pixels
+        output_dir: Directory to save images to
+        topic: Optional topic for organizing images
+        
+    Returns:
+        List of ScrapedImage objects with local_path set
+    """
+    warnings.warn(
+        "extract_and_download_images is deprecated. Use cliche.scraping.extractors.image_extractor.ImageExtractor instead.",
+        DeprecationWarning, 
+        stacklevel=2
+    )
+    
+    # Run the async function in a new event loop
+    return asyncio.run(extract_and_download_images_async(
+        html_content=html_content,
+        base_url=base_url,
+        max_images=max_images,
+        min_size=min_size,
+        output_dir=output_dir,
+        topic=topic
+    ))
 
 async def extract_images_from_html(html_content: str, base_url: str, 
                                    max_images: int = 10, 

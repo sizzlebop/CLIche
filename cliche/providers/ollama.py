@@ -7,21 +7,34 @@ import requests
 from .base import LLMBase
 
 class OllamaProvider(LLMBase):
-    def __init__(self, config: Dict):
-        super().__init__(config)
-        self.host = config.get('host', 'http://localhost:11434')
+    def __init__(self, config):
+        """Initialize the Ollama provider."""
+        
+        # Check if config is a Config object or a dictionary
+        if hasattr(config, 'get_provider_config'):
+            # Config object
+            provider_config = config.get_provider_config('ollama')
+        else:
+            # Dictionary
+            provider_config = config
+        
+        # Get configuration values with proper defaults
+        self.base_url = provider_config.get('host', 'http://localhost:11434')
+        self.model = provider_config.get('model', 'llama3')
+        self.max_tokens = provider_config.get('max_tokens', 2048)
+        # Rest of initialization...
 
     async def generate_response(self, query: str, include_sys_info: bool = False, professional_mode: bool = False) -> str:
         try:
             response = requests.post(
-                f"{self.host}/api/generate",
+                f"{self.base_url}/api/generate",
                 json={
-                    "model": self.config['model'],
+                    "model": self.model,
                     "system": self.get_system_context(include_sys_info, professional_mode),
                     "prompt": query,
                     "stream": False,
                     "options": {
-                        "num_predict": self.config.get('max_tokens', 300)
+                        "num_predict": self.max_tokens
                     }
                 }
             )
@@ -33,7 +46,7 @@ class OllamaProvider(LLMBase):
     async def list_models(self) -> List[Tuple[str, str]]:
         """List available Ollama models."""
         try:
-            response = requests.get(f"{self.host}/api/tags")
+            response = requests.get(f"{self.base_url}/api/tags")
             response.raise_for_status()
             models = []
             for model in response.json().get('models', []):
