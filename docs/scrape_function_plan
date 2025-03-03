@@ -40,6 +40,15 @@
   - Improved clarity of command responsibilities
   - Enhanced console output with stats
 
+- [ ] **Test Crawl4AI Integration**
+  - Tested with real websites (Wikipedia successfully)
+  - Verified extraction with HTML-based sites
+  - Identified limitations with JavaScript-heavy sites
+  - Added Crawl4AI to the list of supported scrapers
+  - Updated README with new architecture details
+  - Provided examples for using the new modules
+  > - Test functionality with other websites - {PRIORITY}
+
 ### Future Enhancements
 
 1. **Dynamic Website Support**
@@ -52,21 +61,41 @@
    - Implement parallel processing for large sites
    - Add caching for repeated requests
    - Create adaptive strategies based on site structure
+   - Add rate limiting and politeness controls for responsible scraping
+   - Implement resumable scraping for large sites
 
 3. **Advanced Features**
    - Add content-based image filtering
    - Implement OCR for image text extraction
    - Create smart cropping for image previews
+   - Add intelligent depth control based on content relevance
+   - Create depth visualization to show crawling progress
 
 ### Specialized Extractors Plan
 
-1. Implement specialized extractors for:
-   - GitHub Documentation
-   - Hugging Face Documentation 
-   - GitBooks-style sites
-   - Medium articles
+1. **Existing Specialized Extractors**
+   - [x] Wikipedia Extractor
+   - [x] Python Documentation Extractor
 
-2. Implement a Reddit parser with:
+2. **New Specialized Extractors to Implement**
+   - [ ] **Blog/Medium Extractor**
+     - Optimize for Medium, WordPress, Ghost and other blog platforms
+     - Add pagination detection for complete article extraction
+     - Handle author profiles and publication pages
+     - Integrate with existing image scraper
+     - Test across multiple blog platforms
+     - Implement better extraction of dates, authors, tags
+   - [ ] GitHub Documentation
+   - [ ] Hugging Face Documentation 
+   - [ ] GitBooks-style sites
+
+3. **Content Processing Improvements**
+   - [ ] Implement better cleanup of extracted content
+   - [ ] Add smart content organization by topic/category
+   - [ ] Enhance metadata extraction
+   - [ ] Create specialized handling for different content types
+
+4. **Reddit Parser**
    - Post extraction
    - Comment hierarchy
    - Media embedding
@@ -74,7 +103,9 @@
 
 ### Next Steps
 
-1. Focus on specialized extractors
-2. Implement Reddit parser
-3. Research browser automation integration for dynamic sites
-4. Improve error handling and retry logic
+1. Implement specialized Blog/Medium extractor that works well with sites like Medium
+2. Extend general extractor with multi-domain support options
+3. Focus on other specialized extractors
+4. Implement Reddit parser
+5. Research browser automation integration for dynamic sites
+6. Improve error handling and retry logic

@@ -18,6 +18,16 @@ CLIche includes powerful web scraping capabilities that allow you to extract and
 - [Advanced Usage](#advanced-usage)
 - [Troubleshooting](#troubleshooting)
 
+## What's New
+
+### Enhanced Extraction (v1.4.0)
+
+- **Browser-Based Rendering**: Improved JavaScript content support using direct browser automation
+- **Higher Character Limits**: Extract up to 1 million characters per site (previously 50,000)
+- **Detailed Progress**: Step-by-step console output showing fetch and extraction progress
+- **Specialized Extractors**: Optimized extraction for Wikipedia and Python documentation
+- **Performance Improvements**: Faster and more reliable content processing
+
 ## Prerequisites
 
 Ensure you have the following dependencies installed:
@@ -31,46 +41,59 @@ These are automatically installed when you install CLIche.
 
 ## Scrape Command
 
-The `scrape` command extracts content from websites based on a URL and optionally a specific topic. It uses intelligent content extraction to focus on the most relevant information.
+The `scrape` command extracts structured content from websites.
 
 ### Usage
 
 ```bash
-cliche scrape URL [OPTIONS]
+cliche scrape [OPTIONS] URL
 ```
 
 ### Options
 
 | Option | Description |
 |--------|-------------|
-| `--topic TEXT` | Focus on a specific topic when scraping content |
-| `--depth INTEGER` | Maximum crawling depth (default: 1) |
-| `--max-pages INTEGER` | Maximum number of pages to scrape (default: 10) |
-| `--output TEXT` | Output file name (default: auto-generated) |
-| `--format [json\|markdown\|text]` | Output format (default: json) |
-| `--debug` | Enable debug mode for verbose output |
-| `--help` | Show help message |
+| `--depth, -d INTEGER` | How many levels of links to follow (default: 0) |
+| `--max-pages INTEGER` | Maximum number of pages to scrape (default: 3) |
+| `--images, -i` | Extract and download images |
+| `--output, -o TEXT` | Output file path (default: auto-generated) |
+| `--topic, -t TEXT` | Topic to filter content by relevance |
+| `--no-llm` | Disable LLM enhancement |
+| `--raw` | Output raw content without processing |
+| `--save-json` | Save extracted data as JSON |
+| `--verbose, -v` | Show detailed progress output |
 
 ### Examples
 
-**Basic scraping of a single page:**
+#### Basic Website Scraping
+
 ```bash
-cliche scrape "https://docs.python.org/3/library/asyncio.html"
+# Scrape a single page
+cliche scrape https://en.wikipedia.org/wiki/Python_(programming_language)
+
+# Scrape with verbose output
+cliche scrape https://docs.python.org/3/library/asyncio.html --verbose
 ```
 
-**Topic-focused scraping with depth:**
+#### Deep Scraping with Images
+
 ```bash
-cliche scrape "https://docs.python.org/3/" --topic "Python async" --depth 2
+# Scrape a website following links 2 levels deep
+cliche scrape https://python.org --depth 2 --max-pages 10 --images
+
+# Scrape with topic filtering
+cliche scrape https://en.wikipedia.org/wiki/Machine_learning --topic "neural networks" --depth 1
 ```
 
-**Scraping with custom output file:**
-```bash
-cliche scrape "https://flask.palletsprojects.com/" --topic "Flask routing" --output flask_routes
-```
+#### Content Generation from Scraped Data
 
-**Scraping with specific format:**
 ```bash
-cliche scrape "https://react.dev/learn" --topic "React hooks" --format markdown
+# Scrape and then generate a document
+cliche scrape https://flask.palletsprojects.com/ --depth 1
+cliche generate "Flask Framework" --format markdown
+
+# Scrape with raw output
+cliche scrape https://pythonhosted.org/behave/ --raw --save-json
 ```
 
 ## Generate Command

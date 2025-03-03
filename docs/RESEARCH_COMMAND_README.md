@@ -14,6 +14,15 @@ The `research` command allows you to obtain up-to-date information from the web 
 - [Troubleshooting](#troubleshooting)
 - [Advanced Usage](#advanced-usage)
 
+## What's New
+
+### Enhanced Content Extraction (v1.4.0)
+
+- **Higher Character Limits**: Extract up to 100,000 characters per page (previously 20,000)
+- **Improved Content Quality**: Better extraction from JavaScript-heavy websites
+- **Detailed Progress**: Step-by-step console output showing fetch and extraction progress
+- **Multiple Search Engine Support**: Use DuckDuckGo, Brave, or automatic selection
+
 ## Prerequisites
 
 Ensure you have the following dependencies installed:
@@ -28,35 +37,36 @@ These are automatically installed when you install CLIche.
 ## Usage
 
 ```bash
-cliche research "Your query here" [OPTIONS]
+cliche research [OPTIONS] QUERY
 ```
 
 ## Options
 
 | Option | Description |
 |--------|-------------|
-| `--depth INTEGER` | Number of sources to search (default: 3) |
-| `--write` | Save the results to a document |
-| `--format [markdown\|html\|text]` | Output format when using --write (default: markdown) |
-| `--output TEXT` | Custom output file name when using --write |
-| `--professional` | Use professional tone (default: CLIche's snarky tone) |
+| `--depth, -d INTEGER` | Number of search results to analyze (default: 3) |
+| `--debug` | Enable debug mode with detailed error messages |
+| `--fallback-only` | Skip primary crawler and use only fallback scraper |
+| `--write, -w` | Generate a document instead of terminal output |
+| `--format, -f [text\|markdown\|html]` | Document format when using --write (default: markdown) |
+| `--filename TEXT` | Optional filename for the generated document |
 | `--image TEXT` | Add images related to the topic by search term |
 | `--image-count INTEGER` | Number of images to add (default: 3) |
-| `--image-width INTEGER` | Width of images in pixels (default: 800) |
-| `--debug` | Enable debug mode for verbose output |
-| `--help` | Show help message |
+| `--image-width INTEGER` | Width of images (default: 800) |
 | `--search-engine [auto\|duckduckgo\|brave]` | Search engine to use (default: auto) |
+| `--summarize` | Generate a concise summary document |
+| `--snippet` | Generate a very brief snippet/overview |
 
 ## Examples
 
-**Basic research query:**
-```bash
-cliche research "Latest developments in quantum computing"
-```
+### Basic Research
 
-**Research with increased depth (more sources):**
 ```bash
-cliche research "History of artificial intelligence" --depth 5
+# Research a topic and display results in the terminal
+cliche research "climate change impacts"
+
+# Research with increased depth (more sources)
+cliche research "quantum computing basics" --depth 5
 ```
 
 **Generate a markdown document with the research results:**

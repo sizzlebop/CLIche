@@ -321,8 +321,8 @@ async def extract_content_with_crawler(crawler, url, config, debug=False):
         for attr in ['text', 'cleaned_text', 'content', 'cleaned_html', 'html']:
             if hasattr(content, attr):
                 text_value = getattr(content, attr)
-                if text_value and isinstance(text_value, str) and len(text_value) > 100:
-                    extracted_text = text_value[:20000]  # Limit content size
+                if text_value and isinstance(text_value, str) and len(text_value) > 100000:
+                    extracted_text = text_value[:100000]  # Limit content size
                     if debug:
                         click.echo(f"  Found text in content.{attr}: {len(extracted_text)} chars")
                     break
@@ -330,11 +330,11 @@ async def extract_content_with_crawler(crawler, url, config, debug=False):
     # If no text found, try using content directly if it's a string
     if extracted_text is None and content is not None and isinstance(content, str):
         try:
-            if len(content) > 100:
+            if len(content) > 100000:
                 if '<html' in content.lower():
-                    extracted_text = extract_text_from_html(content)[:20000]
+                    extracted_text = extract_text_from_html(content)[:100000]
                 else:
-                    extracted_text = content[:20000]  # Use directly if it's already plain text
+                    extracted_text = content[:100000]  # Use directly if it's already plain text
                 if debug:
                     click.echo(f"  Extracted {len(extracted_text)} chars from content string")
         except Exception as e:
@@ -344,8 +344,8 @@ async def extract_content_with_crawler(crawler, url, config, debug=False):
     # If content is a dictionary, check for common keys that might contain text
     if extracted_text is None and content is not None and isinstance(content, dict):
         for key in ['content', 'text', 'body', 'main', 'article']:
-            if key in content and isinstance(content[key], str) and len(content[key]) > 100:
-                extracted_text = content[key][:20000]
+            if key in content and isinstance(content[key], str) and len(content[key]) > 100000:
+                extracted_text = content[key][:100000]
                 if debug:
                     click.echo(f"  Found text in content['{key}']: {len(extracted_text)} chars")
                 break
@@ -512,8 +512,8 @@ def research(query, depth, debug, fallback_only, write, format, filename,
                                 # Try alternate extraction method
                                 fallback_content = await fallback_scrape(url, debug)
                                 
-                                if fallback_content and len(fallback_content) > 100:
-                                    extracted_text = fallback_content[:20000]  # Increased content size limit
+                                if fallback_content and len(fallback_content) > 100000:
+                                    extracted_text = fallback_content[:100000]  # Increased content size limit
                                     extracted_data.append({
                                         "title": title,
                                         "url": url,
@@ -533,8 +533,8 @@ def research(query, depth, debug, fallback_only, write, format, filename,
                                 console.print(f"⚠️ Trying fallback scraper after error...")
                                 fallback_content = await fallback_scrape(url, debug)
                                 
-                                if fallback_content and len(fallback_content) > 100:
-                                    extracted_text = fallback_content[:20000]  # Increased content size limit
+                                if fallback_content and len(fallback_content) > 100000:
+                                    extracted_text = fallback_content[:100000]  # Increased content size limit
                                     extracted_data.append({
                                         "title": title,
                                         "url": url,
@@ -571,8 +571,8 @@ def research(query, depth, debug, fallback_only, write, format, filename,
                     # Try fallback scraping
                     fallback_content = await fallback_scrape(url, debug)
                     
-                    if fallback_content and len(fallback_content) > 100:
-                        extracted_text = fallback_content[:20000]  # Increased content size limit
+                    if fallback_content and len(fallback_content) > 100000:
+                        extracted_text = fallback_content[:100000]  # Increased content size limit
                         extracted_data.append({
                             "title": title,
                             "url": url,

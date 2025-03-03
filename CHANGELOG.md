@@ -4,6 +4,27 @@ All notable changes to the CLIche project will be documented in this file.
 
 ## [Pre-Release Beta]
 
+## [Unreleased]
+### Added
+- 🔍 Improved web scraping capabilities:
+  - Increased character limit in general extractor to 1 million chars
+  - Increased character limit in research command to 100K chars per page
+  - Added browser-based rendering for better JavaScript content extraction
+  - Implemented detailed progress output with timing information
+  - Enhanced console output to match research command style
+- 📚 Updated documentation for scraping and research commands
+- 🗺️ Added future plans for specialized blog/medium extractor
+
+### Changed
+- Refactored general extractor to use direct browser rendering
+- Improved error handling and fallback mechanisms
+- Enhanced content extraction quality for JavaScript-heavy sites
+
+### Fixed
+- Resolved browser initialization issues with crawl4ai
+- Fixed character limit inconsistencies between commands
+- Improved image extraction reliability
+
 ## [1.4.0] - 2025-02-28
 
 ### Added
