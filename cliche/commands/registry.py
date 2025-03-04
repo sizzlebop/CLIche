@@ -16,7 +16,7 @@ from .system import system
 from .view import view
 from .write import write
 from .research import research
-from ..utils.generate_from_scrape import generate
+from .draw import draw
 
 def register_commands(cli):
     """Register all commands with the CLI."""
@@ -40,4 +40,4 @@ def register_commands(cli):
     cli.add_command(view)
     cli.add_command(write)
     cli.add_command(research)
-    cli.add_command(generate)
+    cli.add_command(draw)

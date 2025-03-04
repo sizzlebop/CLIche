@@ -16,34 +16,34 @@ DEFAULT_CONFIG = {
   "providers": {
     "openai": {
       "api_key": "your_openai_key_here",
-      "model": "gpt-4-turbo",
-      "max_tokens": 8000
+      "model": "gpt-3.5-turbo",
+      "max_tokens": 16000
     },
     "anthropic": {
       "api_key": "your_anthropic_key_here",
-      "model": "claude-3-opus", 
-      "max_tokens": 8000
+      "model": "claude-instant",
+      "max_tokens": 100000
     },
     "google": {
       "api_key": "your_google_key_here",
       "model": "gemini-pro",
-      "max_tokens": 8000
+      "max_tokens": 32000
     },
     "deepseek": {
       "api_key": "your_deepseek_key_here",
       "model": "deepseek-chat",
-      "max_tokens": 2048,
+      "max_tokens": 8192,
       "api_base": "https://api.deepseek.com/v1"
     },
     "openrouter": {
       "api_key": "your_openrouter_key_here",
-      "model": "anthropic/claude-3-opus",
-      "max_tokens": 8000
+      "model": "openai/gpt-3.5-turbo",
+      "max_tokens": 100000
     },
     "ollama": {
       "host": "http://localhost:11434",
       "model": "llama3",
-      "max_tokens": 2048
+      "max_tokens": 100000
     }
   }
 }

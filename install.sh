@@ -20,13 +20,15 @@ if [ ! -d "/opt/cliche" ]; then
     sudo chown $USER:$USER /opt/cliche
 fi
 
-# Create and activate virtual environment
+# Create and activate virtual environment with system Python
 echo -e "${CYAN}📦 Creating virtual environment...${WHITE}"
-python3 -m venv /opt/cliche/venv
+/usr/bin/python3 -m venv /opt/cliche/venv
 
 # Copy project files
 echo -e "${CYAN}📂 Copying project files...${WHITE}"
 cp -r cliche /opt/cliche/
+cp -r draw /opt/cliche/
+cp -r docs /opt/cliche/ 2>/dev/null || :
 cp setup.py /opt/cliche/
 cp requirements.txt /opt/cliche/
 cp environment.yml /opt/cliche/ 2>/dev/null || :
@@ -48,6 +50,13 @@ chmod +x install_image_deps.sh
 ./install_image_deps.sh
 unset CLICHE_INSTALLING
 
+# Install Durdraw dependencies for the draw command
+echo -e "${CYAN}🎨 Setting up drawing capabilities...${WHITE}"
+cd /opt/cliche/draw
+# Use sudo for the pip installation to ensure proper permissions
+sudo $(/opt/cliche/venv/bin/which pip) install -e .
+cd /opt/cliche
+
 # Create symlink to make cliche available system-wide
 echo -e "${CYAN}🔗 Creating system-wide symlink...${WHITE}"
 sudo ln -sf /opt/cliche/venv/bin/cliche /usr/local/bin/cliche
@@ -64,7 +73,7 @@ source ~/.bashrc
 
 # Test the installation
 if command -v cliche >/dev/null 2>&1; then
-    echo -e "    
+    echo -e "${PINK}    
                   ### #   #        #      ### #   #    #   ### # 
                 ##  #   ##       ##     ##  #   ##   #   ##  #  
                 ##       ##       ##    ##       ##   #  ##      
@@ -74,7 +83,7 @@ if command -v cliche >/dev/null 2>&1; then
                 ### ##   ###  #   #     ### ##   #    #  ### ##  
                 #### # # #####  #       #### # #    ###  #### # 
 
-                "
+                ${NC}"
     echo -e "${GREEN}🎉 CLIche installed successfully!${WHITE}"
     echo -e "${CYAN}✨ You can now use 'cliche' from anywhere.${WHITE}"
     echo -e "${PURPLE}🔑 To get started, configure your API settings${WHITE}"
@@ -84,6 +93,7 @@ if command -v cliche >/dev/null 2>&1; then
     echo -e "${PINK}📚 For options type 'cliche --help'${NC}"
     echo -e "${YELLOW}📡 For web research: try the 'research' command${NC}"
     echo -e "${YELLOW}🔍 For web scraping: try the 'scrape' command${NC}"
+    echo -e "${YELLOW}🎨 For drawing: try the 'draw' command${NC}"
     echo -e "${YELLOW}📄 To uninstall, run: sudo /opt/cliche/uninstall.sh${WHITE}"
 
     # Make symlink executable
@@ -91,4 +101,4 @@ if command -v cliche >/dev/null 2>&1; then
 else
     echo -e "${RED}❌ Installation failed. Please check the error messages above.${NC}"
     exit 1
-fi
+fi 

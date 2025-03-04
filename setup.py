@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="cliche-cli",
     version="0.2.0",
-    packages=find_packages(),
+    packages=find_packages() + ['draw', 'draw.durdraw'],
     include_package_data=True,
     install_requires=[
         'click>=8.0.0',
@@ -29,7 +29,9 @@ setup(
         'pydantic>=2.0.0',
         'python-unsplash>=1.1.0',
         'Pillow>=10.0.0',  # For image processing
-        'python-magic>=0.4.27',  # For file type detection
+        'python-magic>=0.4.27', 
+        'GitPython',  # Required for automatic Durdraw installation
+        'praw>=7.8.1',
         # External system dependency (not listed here, install manually):
         # chafa - terminal image viewer (recommended version 1.12.0+)
         # Ubuntu/Debian: sudo add-apt-repository ppa:hpjansson/chafa && sudo apt update && sudo apt install chafa
