@@ -12,6 +12,7 @@ from ..core import cli, get_llm
 from ..utils.file import save_text_to_file, get_docs_dir, get_unique_filename
 from ..utils.unsplash import UnsplashAPI, format_image_for_markdown, format_image_for_html, get_photo_credit
 import re  # Add this import at the top if it's not already there
+from cliche.utils.markdown_cleaner import clean_markdown_document
 
 # Initialize console for rich output
 console = Console()
@@ -141,7 +142,6 @@ async def async_write(prompt: tuple[str, ...], format: str, path: Optional[str],
             content = llm_response
             
             # Clean the markdown document
-            from cliche.utils.generate_from_scrape import clean_markdown_document
             content = clean_markdown_document(content)
             
         elif format == "html":

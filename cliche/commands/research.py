@@ -13,6 +13,7 @@ from rich.console import Console
 from ..core import cli, CLIche, get_llm
 from ..utils.file import save_text_to_file, get_docs_dir, get_unique_filename
 from ..utils.unsplash import UnsplashAPI, format_image_for_markdown, format_image_for_html, get_photo_credit
+from cliche.utils.markdown_cleaner import clean_markdown_document
 
 # Initialize console for rich output
 console = Console()
@@ -621,7 +622,7 @@ def research(query, depth, debug, fallback_only, write, format, filename,
                     The snippet should provide a quick overview that could fit in a preview card or executive summary.
                     Include only the most essential information - core definition, key points, and relevance.
                     
-                    Keep the total length under 300 words. Use markdown formatting.
+                    Keep the total length around 500-700 words. Use markdown formatting.
                     """
                 elif format == 'html':
                     doc_template = """Create a VERY BRIEF SNIPPET (maximum 2-3 paragraphs) about this topic in HTML format. The ENTIRE content must use proper HTML tags, not Markdown.
@@ -629,7 +630,7 @@ def research(query, depth, debug, fallback_only, write, format, filename,
                     The snippet should provide a quick overview that could fit in a preview card or executive summary.
                     Include only the most essential information - core definition, key points, and relevance.
                     
-                    Keep the total length under 300 words.
+                    Keep the total length around 500-700 words.
 
 EXTREMELY IMPORTANT: You MUST use HTML tags for EVERYTHING and NEVER use Markdown syntax anywhere in your response.
 For example:
@@ -652,7 +653,7 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
                     The snippet should provide a quick overview that could fit in a preview card or executive summary.
                     Include only the most essential information - core definition, key points, and relevance.
                     
-                    Keep the total length under 300 words.
+                    Keep the total length around 500-700 words.
                     """
             elif summarize:
                 if format == 'markdown':
@@ -666,7 +667,7 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
                     - Basic background information
                     - Current relevance
                     
-                    Keep the length moderate (around 800-1000 words). Use markdown formatting with appropriate headings.
+                    Keep the length moderate (around 1200-1500 words). Use markdown formatting with appropriate headings.
                     
                     EXTREMELY IMPORTANT:
                     1. DO NOT start your response with ```markdown or any code fences
@@ -683,7 +684,7 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
                     - Basic background information
                     - Current relevance
                     
-                    Keep the length moderate (around 800-1000 words).
+                    Keep the length moderate (around 1200-1500 words).
 
 EXTREMELY IMPORTANT: You MUST use HTML tags for EVERYTHING and NEVER use Markdown syntax anywhere in your response.
 For example:
@@ -710,7 +711,7 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
                     - Basic background information
                     - Current relevance
                     
-                    Keep the length moderate (around 800-1000 words). Use clear paragraph breaks and section indicators.
+                    Keep the length moderate (around 1200-1500 words). Use clear paragraph breaks and section indicators.
                     """
             
             # Get image instructions if we have images
@@ -868,7 +869,6 @@ Every single piece of content must be enclosed in appropriate HTML tags. Do not 
                 
                 # Clean up any stray markdown code fences - import if needed
                 if format == 'markdown':
-                    from cliche.utils.generate_from_scrape import clean_markdown_document
                     response = clean_markdown_document(response)
                 
                 # Clean up any stray markdown code fences from HTML content

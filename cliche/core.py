@@ -17,7 +17,6 @@ from .providers.google import GoogleProvider
 from .providers.ollama import OllamaProvider
 from .providers.deepseek import DeepSeekProvider
 from .providers.openrouter import OpenRouterProvider
-from .utils.generate_from_scrape import generate
 
 class Config:
     def __init__(self):
@@ -33,12 +32,12 @@ class Config:
             default_config = {
                 "provider": "openai",
                 "providers": {
-                    "openai": {"api_key": "", "model": "gpt-4"},
-                    "anthropic": {"api_key": "", "model": "claude-3-opus-20240229"},
-                    "google": {"api_key": "", "model": "gemini-pro"},
-                    "ollama": {"model": "phi4"},
-                    "deepseek": {"api_key": "", "model": "deepseek-chat"},
-                    "openrouter": {"api_key": "", "model": "gpt-4-turbo-preview"}
+                    "openai": {"api_key": "", "model": "gpt-3.5-turbo", "max_tokens": 16000},
+                    "anthropic": {"api_key": "", "model": "claude-instant", "max_tokens": 100000},
+                    "google": {"api_key": "", "model": "gemini-pro", "max_tokens": 32000},
+                    "ollama": {"model": "phi4", "max_tokens": 100000},
+                    "deepseek": {"api_key": "", "model": "deepseek-chat", "max_tokens": 8192},
+                    "openrouter": {"api_key": "", "model": "openai/gpt-3.5-turbo", "max_tokens": 100000}
                 },
                 "services": {
                     "unsplash": {"api_key": ""},
