@@ -52,23 +52,22 @@ ctx.invoke(scrape, url='$URL', topic='$TOPIC' if '$TOPIC' else None, **options)
 " "$@"
     ;;
     
-  "generate")
-    TOPIC=$1
+  "draw")
     shift
     # Run the command
     $SYSTEM_PYTHON -c "
 import sys
 sys.path.insert(0, '$(pwd)')
-from cliche.utils.generate_from_scrape import generate
+from cliche.commands.draw import draw
 import click
-ctx = click.Context(generate)
-ctx.invoke(generate, topic='$TOPIC')
+ctx = click.Context(draw)
+ctx.invoke(draw)
 " "$@"
     ;;
     
   *)
     echo "❌ Command not supported: $CMD"
-    echo "Supported commands: scrape, generate"
+    echo "Supported commands: scrape, draw"
     exit 1
     ;;
 esac 

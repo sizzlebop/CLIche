@@ -16,6 +16,7 @@ from .view import view
 from .write import write
 from .research import research
 from .create import create
+from .draw import draw
 
 __all__ = [
     'ansi',
@@ -33,4 +34,5 @@ __all__ = [
     'write',
     'research',
     'create',
+    'draw',
 ]

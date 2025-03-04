@@ -16,19 +16,19 @@ from ..core import cli
 @click.option('--random', '-r', is_flag=True, help='Generate random art')
 @click.option('--list-fonts', '-l', is_flag=True, help='List available ASCII art fonts')
 @click.option('--index', '-i', type=int, help='Index of ANSI art to display')
-@click.option('--banner', '-b', is_flag=True, help='Create a banner-style text')
+@click.option('--banner', '-b', is_flag=True, help='Generate a banner-style text')
 def create(text: str = None, ascii: bool = False, ansi: bool = False, 
            font: str = None, random: bool = False, list_fonts: bool = False,
            index: int = None, banner: bool = False):
-    """Create ASCII or ANSI art.
+    """Generate ASCII or ANSI art.
     
     Examples:
-      cliche create --ascii "Hello"       # Create ASCII text art
+      cliche create --ascii "Hello"       # Generate ASCII text art
       cliche create --ansi                # Show random ANSI art
       cliche create --ascii --random      # Display random ASCII decorative art
       cliche create --ascii "Hi" --font block # Use specific font
       cliche create --list-fonts          # List available fonts
-      cliche create --banner "My Project" # Create a banner-style header
+      cliche create --banner "My Project" # Generate a banner-style header
       cliche create "Cool"                # Default to ASCII text art if text provided
     """
     # List available fonts if requested
