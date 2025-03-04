@@ -53,47 +53,45 @@ cliche scrape [OPTIONS] URL
 
 | Option | Description |
 |--------|-------------|
-| `--depth, -d INTEGER` | How many levels of links to follow (default: 0) |
-| `--max-pages INTEGER` | Maximum number of pages to scrape (default: 3) |
-| `--images, -i` | Extract and download images |
-| `--output, -o TEXT` | Output file path (default: auto-generated) |
-| `--topic, -t TEXT` | Topic to filter content by relevance |
-| `--no-llm` | Disable LLM enhancement |
-| `--raw` | Output raw content without processing |
-| `--save-json` | Save extracted data as JSON |
-| `--verbose, -v` | Show detailed progress output |
+| `--topic, -t TEXT` | Topic of the scrape |
+| `--depth, -d INTEGER` | Depth of the scrape (levels of links to follow) (default: 3) |
+| `--max-pages, -m INTEGER` | Maximum number of pages to crawl (default: 3) |
+| `--debug` | Enable debug mode with detailed error messages |
+| `--fallback-only` | Skip primary crawler and use only the fallback scraper |
+| `--write, -w` | Generate a document instead of terminal output |
+| `--format, -f [text\|markdown\|html]` | Document format when using --write (default: markdown) |
+| `--filename` | Optional filename for the generated document |
+| `--image, -i TEXT` | Add images related to the topic by search term |
+| `--image-count INTEGER` | Number of images to add (default: 3) |
+| `--image-width INTEGER` | Width of images (default: 800) |
+| `--search-engine [auto\|duckduckgo\|brave]` | Search engine to use (auto tries all available) |
+| `--summarize` | Generate a concise summary document instead of a comprehensive one |
+| `--snippet` | Generate a very brief snippet/overview (few paragraphs) |
 
 ### Examples
 
-#### Basic Website Scraping
-
+**Basic Usage:**
 ```bash
-# Scrape a single page
-cliche scrape https://en.wikipedia.org/wiki/Python_(programming_language)
-
-# Scrape with verbose output
-cliche scrape https://docs.python.org/3/library/asyncio.html --verbose
+# Scrape a single URL without following links
+cliche scrape https://docs.github.com
 ```
 
-#### Deep Scraping with Images
-
+**Advanced Usage with Link Following:**
 ```bash
-# Scrape a website following links 2 levels deep
-cliche scrape https://python.org --depth 2 --max-pages 10 --images
+# Follow links 2 levels deep, maximum 5 pages total
+cliche scrape https://docs.python.org/3/library/asyncio.html --depth 2 --max-pages 5
 
-# Scrape with topic filtering
-cliche scrape https://en.wikipedia.org/wiki/Machine_learning --topic "neural networks" --depth 1
+# Enable debug mode to see detailed information about the scraping process
+cliche scrape https://docs.python.org --depth 3 --max-pages 10 --debug
 ```
 
-#### Content Generation from Scraped Data
-
+**Generate Documents:**
 ```bash
-# Scrape and then generate a document
-cliche scrape https://flask.palletsprojects.com/ --depth 1
-cliche generate "Flask Framework" --format markdown
+# Scrape and generate a markdown document
+cliche scrape https://flask.palletsprojects.com --depth 1 --write --format markdown
 
-# Scrape with raw output
-cliche scrape https://pythonhosted.org/behave/ --raw --save-json
+# Scrape and generate a document with images
+cliche scrape https://docs.python.org/3/tutorial/ --depth 2 --write --image "python programming" --image-count 2
 ```
 
 ## Generate Command
@@ -324,6 +322,59 @@ Some websites block scraping attempts. In these cases:
    ```
 
 2. If a website returns a 403 Forbidden error, it likely has anti-scraping measures in place. Try finding alternative sources.
+
+## Advanced Features
+
+### Multi-Page Content Extraction
+
+The scrape command supports sophisticated multi-page content extraction using two key parameters:
+
+- **depth**: Controls how many levels of links to follow
+  - `depth=1`: Scrapes only the specified URL (default)
+  - `depth=2`: Scrapes the URL and follows links from that page
+  - `depth=3+`: Follows links multiple levels deep
+
+- **max-pages**: Limits the total number of pages scraped
+  - Controls the maximum number of pages processed across all depth levels
+  - Prevents excessive scraping of large websites
+  - Default is 3 pages total
+
+The system intelligently scales content limits based on depth:
+- Each depth level increases the character limit by 100,000 chars
+- With `depth=3`, the total character limit would be 300,000 chars
+
+**How Link Following Works:**
+
+1. The crawler starts with the provided URL
+2. When `depth > 1`, it identifies and follows links within the same domain
+3. For each followed link, it extracts content using the same process
+4. Content from all pages is combined with separators between pages
+5. The total content is limited based on the depth parameter (100,000 × depth)
+
+**Best Practices:**
+
+- For simple documentation sites, `--depth 1` may be sufficient
+- For complex, interconnected documentation, try `--depth 2 --max-pages 5`
+- For comprehensive research, use `--depth 3 --max-pages 10`
+- Always use `--debug` when experimenting to see the crawler configuration
+
+### Using Debug Mode
+
+The `--debug` flag provides valuable information about the scraping process:
+
+```bash
+cliche scrape https://docs.github.com --depth 2 --max-pages 5 --debug
+```
+
+Debug output includes:
+- Crawler configuration details (link following, page limits)
+- Content limit information based on depth
+- Available crawler methods
+- Processing progress for multi-page extraction
+- Content extraction metrics (size, page count)
+- Detailed error information when failures occur
+
+This is particularly helpful when troubleshooting or when you need to understand how the crawler is processing a specific website.
 
 ---
 

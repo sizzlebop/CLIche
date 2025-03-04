@@ -14,16 +14,39 @@
 
 ## Latest Features
 
+### Interactive ANSI Art Drawing
+
+- 🎨 **New `draw` Command**: Create ASCII and ANSI art with a full-featured terminal-based drawing editor
+- 🖌️ **Rich Drawing Tools**: Block selection, line drawing, fill tools, and brush tools
+- 🎬 **Animation Support**: Create frame-by-frame animations with customizable playback controls
+- 🎭 **Multiple Drawing Modes**: Choose between ASCII text art or colorful ANSI block art with 256 colors
+- 🖱️ **Mouse Support**: Intuitive mouse-based drawing interface with multiple tools
+
+```bash
+# Start the drawing editor
+cliche draw
+
+# Create ASCII text art
+cliche draw --ascii
+
+# Create colorful ANSI block art
+cliche draw --ansi
+
+# Set a custom canvas size
+cliche draw -w 100 -h 40
+```
+
 ### Enhanced Web Scraping & Research
 
 - **Deep Content Extraction**: Extract up to 1 million characters from websites with the `scrape` command
+- **Improved Link Following**: Configurable depth levels and page limits for more precise crawling
+- **Content Prioritization**: Enhanced algorithm to extract larger, more relevant content chunks
+- **Multiple Page Handling**: Better processing of content from linked pages within the same domain
+- **Improved Debug Output**: Clear, detailed information about the scraping process and configuration
 - **Improved Research**: Get up to 100,000 characters per page with the `research` command
-- **Browser-Based Rendering**: Better support for JavaScript-heavy websites
-- **Specialized Extractors**: Optimized extraction for Wikipedia and Python documentation
-
 ```bash
-# Scrape a website deeply
-cliche scrape https://docs.python.org/3/library/asyncio.html --depth 3 --max-pages 10
+# Scrape a website deeply (follow links 3 levels deep, max 5 pages total)
+cliche scrape https://docs.python.org/3/library/asyncio.html --depth 3 --max-pages 5
 
 # Research a topic with more comprehensive results
 cliche research "machine learning techniques" --depth 5 --write
@@ -44,6 +67,12 @@ cliche research "machine learning techniques" --depth 5 --write
 
 ## Core Features
 
+- 🎨 **Creative tools**:
+  - Interactive ASCII/ANSI art editor with the `draw` command
+  - ASCII text art and banner generation
+  - ANSI color art creation
+  - Animation capabilities
+  
 - 🔄 **Multi-provider support**:
   - OpenAI
   - Anthropic
@@ -98,36 +127,39 @@ cliche research "machine learning techniques" --depth 5 --write
 
 ## Installation
 
-Choose one of these methods:
-
-### Method 1: Automatic Installation Script (Recommended)
+### Quick Install (Recommended)
 
 ```bash
-# Clone the repository
-git clone https://github.com/sizzlebop/cliche.git
+git clone https://github.com/pinkpixel-dev/cliche.git
 cd cliche
-
-# Run the installation script
-./install.sh
+sudo ./install.sh  # sudo is required for proper installation
 ```
 
-### Method 2: Manual Installation
+> **Note**: The installation requires sudo privileges, especially for the drawing capabilities. The installation script will prompt for your password as needed.
+
+### Manual Installation (Advanced Users)
 
 ```bash
 # Clone the repository
-git clone https://github.com/sizzlebop/cliche.git
+git clone https://github.com/pinkpixel-dev/cliche.git
 cd cliche
 
-# Create virtual environment
+# Create a virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
 
 # Install dependencies
-pip install -r requirements.txt
-
-# Install package
 pip install -e .
+
+# Install optional dependencies for image viewing
+# For Ubuntu/Debian:
+sudo apt install chafa libmagic1
+
+# For macOS:
+brew install chafa libmagic
 ```
+
+Note that manual installation may not fully set up all dependencies for the `draw` command, which requires additional permissions to install properly.
 
 ## Terminal Image Viewing Dependencies
 
@@ -243,46 +275,24 @@ cliche servers
 cliche roastme
 ```
 
-10. Get a random ASCII art pattern:
+10. Generate ASCII/ANSI art with the unified command:
 ```bash
-cliche art
-cliche art "hello" - get a specific ASCII art pattern
-```
-
-11. Get a random ANSi art pattern:
-```bash
-cliche ansi
-```
-
-12. Create ASCII/ANSI art with the new unified command:
-```bash
-cliche create --ascii "Hello World"  # Create ASCII text art
-cliche create --ansi                 # Show random ANSI art  
-cliche create --banner "My Project"  # Create a banner-style header
+cliche create --ascii "Hello World"  # Generate ASCII text art
+cliche create --ansi                 # Show random ANSI art
+cliche create --banner "My Project"  # Generate a banner-style header
 cliche create --list-fonts           # List available fonts
 cliche create "Cool Text"            # Default to ASCII art with text
 ```
 
-13. Generate AI images with DALL-E or Stability AI:
+11. Generate AI images with DALL-E or Stability AI:
 ```bash
 # Generate an image with DALL-E (default)
 cliche image "a colorful landscape with mountains and a lake" --generate
-
-# Specify a provider and model
-cliche image "a medieval castle on a hill at sunset" --generate --provider dalle --model dall-e-2
-
-# Customize style and size
-cliche image "a futuristic cityscape with flying cars" --generate --style natural --size 1024x1024
-
-# List available providers, models, and styles
-cliche image --list-providers
-cliche image --list-models dalle
-cliche image --list-styles dalle
 ```
 
 Generated images are automatically displayed in your terminal with a clean, minimal interface. You'll see the file location and have options to view it again or open it with your system viewer.
 
-14. View a generated file:
+12. View a generated file:
 ```bash
 cliche view my_file.md --format write
 cliche view game.py --format code
@@ -292,13 +302,22 @@ cliche view python_async_markdown.md --format docs --source scrape
 cliche view research_commands_in_linux.md
 ```
 
-15. Search for files:
+13. Search for files:
 ```bash
 cliche search -t py    # Find all Python files in your home directory
 cliche search -n "*.md" -l  # Find markdown files in current directory
 ```
 
-16. Work with images:
+14. Draw ASCII or ANSI art:
+```bash
+cliche draw                      # Start the drawing editor
+cliche draw --ascii              # Start in ASCII mode
+cliche draw --ansi               # Start in ANSI mode
+cliche draw -w 100 -h 40         # Set custom canvas size
+cliche draw -o myart.dur         # Specify output file
+```
+
+15. Work with images:
 ```bash
 cliche image "mountain landscape" --list  # Search for images
 cliche image --download abcd1234  # Download a specific image
@@ -355,3 +374,79 @@ cliche generate "Python async" --format markdown --image "python programming" --
 ```
 
 The `generate`
+
+## Configuration Management
+
+CLIche offers two ways to manage your configuration:
+
+1. Using the `config` command for API keys and model settings:
+```bash
+cliche config --provider openai --api-key your_api_key_here
+cliche config --provider openai --model gpt-4
+cliche config --provider anthropic --api-key your_anthropic_key
+```
+
+2. Using the `config-manager` command for more advanced configuration:
+```bash
+# Using subcommands (traditional approach)
+cliche config-manager show           # Show current configuration
+cliche config-manager backup         # Create a backup of config
+cliche config-manager create         # Create a default config if none exists
+cliche config-manager reset          # Reset to default config
+cliche config-manager edit           # Open config in editor
+
+# Using direct flags (convenient shortcuts)
+cliche config-manager --show         # Show current configuration
+cliche config-manager --backup       # Create a backup of config
+cliche config-manager --create       # Create a default config if none exists
+cliche config-manager --reset        # Reset to default config
+cliche config-manager --edit         # Open config in editor
+```
+
+Both `config` and `config-manager` commands store settings in `~/.config/cliche/config.json`.
+
+## Command Usage Flexibility
+
+CLIche offers a flexible dual command pattern that lets you use commands in two ways:
+
+### 1. Flag Style (with double-dash)
+
+```bash
+cliche config-manager --show
+cliche config-manager --backup
+cliche research --web "machine learning"
+```
+
+### 2. Subcommand Style (without double-dash)
+
+```bash
+cliche config-manager show
+cliche config-manager backup
+cliche research web "machine learning"
+```
+
+Both styles work interchangeably for supported commands, letting you use whichever approach you prefer. This flexibility makes CLIche more intuitive regardless of your command-line habits.
+
+## Scrape Command
+
+The `scrape` command extracts structured content from websites, with enhanced link-following capabilities:
+
+```bash
+# Basic scraping of a single URL
+cliche scrape https://docs.github.com
+
+# Advanced scraping with depth and page limits
+cliche scrape https://example.com --depth 3 --max-pages 5 --debug
+
+# Generate a markdown document from scraped content
+cliche scrape https://docs.python.org --write --format markdown
+
+# Add images to generated document
+cliche scrape https://flask.palletsprojects.com --write --image "flask web" --image-count 2
+```
+
+**Key Parameters:**
+- `--depth`: Controls how many levels of links to follow (1 = just the URL, 2+ = follow links)
+- `--max-pages`: Limits the total number of pages crawled across all depth levels
+- `--debug`: Shows detailed information about the crawling process and content extraction
+- `--write`: Generates a document from the scraped content
